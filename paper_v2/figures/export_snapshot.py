@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+"""Reduce the raw records to the numbers the figures show, in paper_v2/data/snapshot.json.
+
+Sources (exact expectation values, except for the finite-sampling test of the first version):
+  results/dark_projection/{memory,spectrum,removal,write}.jsonl   five-spin reservoir, five families
+  results/jump_families/{memory,kernel}.jsonl                     exchange, dephasing, gain/loss; kernels
+  results/spin_orders/orders.jsonl                                three-spin reservoir, order shares
+  results/spin_orders/coherence.json                              three-spin recovery with/without dephasing
+  results/order_law/                                              random-unitary reset reservoirs
+  results/review_runs/{extend,scaled,spectrum,dephasing,variance}.jsonl   runs added for the reviews
+  results/measurement_full_v3/measurement_full_aggregate.json     finite sampling of the first version
+"""
+from __future__ import annotations
+
+import json
+from collections import defaultdict
+from pathlib import Path
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[2]
+RES = ROOT / "results"
+OUT = ROOT / "paper_v2" / "data" / "snapshot.json"
+DT = 0.5
+FAMILIES = ("separate", "exchange", "gainloss", "dephasing", "pair", "signed", "groups", "shared")
+
+
+def jsonl(path):
+    return [json.loads(line) for line in path.open()]
+
+
+def half_delay(curve):
+    c = np.cumsum(curve)
+    return int(np.searchsorted(c, 0.5 * c[-1])) + 1
+
+
+def memory_block(kernel):
+    rows = jsonl(RES / "dark_projection" / "memory.jsonl")
+    extra = RES / "jump_families" / "memory.jsonl"
+    if extra.exists():
+        rows += jsonl(extra)
+    base = sorted({r["gamma"] for r in rows})
+    extend = RES / "review_runs" / "extend.jsonl"
+    if extend.exists():
+        rows += jsonl(extend)
+    out = {}
+    for fam in FAMILIES:
+        sel = [r for r in rows if r["design"] == fam]
+        if not sel:
+            continue
+        gammas = sorted({r["gamma"] for r in sel})
+        seeds = sorted({r["seed"] for r in sel})
+        by = {(r["seed"], r["gamma"]): r for r in sel}
+        slow = max(kernel[fam] - 1, 1)
+        rec = {"gamma": gammas, "seeds": seeds, "recall": [], "half": [], "forget": [], "degree": [], "complete": True}
+        for s in seeds:
+            R, H, F, Dg = [], [], [], []
+            for g in gammas:
+                r = by.get((s, g))
+                if r is None:
+                    rec["complete"] = False
+                    R.append(None); H.append(None); F.append(None); Dg.append(None)
+                    continue
+                curve = np.array(r["memory"])
+                R.append(float(curve.sum()))
+                H.append(half_delay(curve))
+                F.append(float(1.0 / (DT * np.mean(np.array(r["rates"])[:slow]))))
+                Dg.append([float(r["by_degree"].get(str(k), 0.0)) for k in (1, 2, 3, 4)] if "by_degree" in r else None)
+            rec["recall"].append(R); rec["half"].append(H); rec["forget"].append(F); rec["degree"].append(Dg)
+        if fam in ("separate", "shared"):
+            curves = np.array([[by[(s, g)]["memory"] for g in base] for s in seeds])
+            rec["curve_mean"] = curves.mean(axis=0).round(5).tolist()
+            rec["curve_gamma"] = base
+        if fam == "shared":
+            red = {}
+            for g in (4.0, 64.0):
+                full = np.mean([by[(s, g)]["memory"] for s in seeds], axis=0)
+                model = np.mean([by[(s, g)]["reduced"] for s in seeds], axis=0)
+                red[f"{g:g}"] = {"full": full.round(5).tolist(), "reduced": model.round(5).tolist()}
+            rec["reduced"] = red
+        out[fam] = rec
+    return out
+
+
+def spectrum_block():
+    rows = jsonl(RES / "dark_projection" / "spectrum.jsonl")
+    seed = sorted({r["seed"] for r in rows})[0]
+    keep = {}
+    for r in rows:
+        if r["seed"] != seed:
+            continue
+        if (r["design"], r["gamma"]) in (("shared", 1.0), ("shared", 8.0), ("shared", 64.0), ("separate", 8.0)):
+            keep[f"{r['design']}_{r['gamma']:g}"] = {"re": r["re"], "im": r["im"]}
+    return {"seed": seed, "maps": keep}
+
+
+def removal_block():
+    rows = jsonl(RES / "dark_projection" / "removal.jsonl")
+    out = {}
+    for g in sorted({r["gamma"] for r in rows}):
+        sel = [r for r in rows if r["gamma"] == g]
+        out[f"{g:g}"] = {k: [float(np.sum(r[k][10:])) for r in sel] for k in ("intact", "rotated", "removed")}
+        out[f"{g:g}"]["curves"] = {k: [list(np.round(r[k], 5)) for r in sel] for k in ("intact", "rotated", "removed")}
+    return out
+
+
+def write_block():
+    rows = jsonl(RES / "dark_projection" / "write.jsonl")
+    gammas = sorted({r["gamma"] for r in rows})
+    seeds = sorted({r["seed"] for r in rows})
+    by = {(r["seed"], r["gamma"]): r for r in rows}
+    return {"gamma": gammas,
+            "along": [[by[(s, g)]["along_dark"] for g in gammas] for s in seeds],
+            "across": [[by[(s, g)]["across_dark"] for g in gammas] for s in seeds]}
+
+
+def spin_block():
+    rows = jsonl(RES / "spin_orders" / "orders.jsonl")
+    extra_path = RES / "spin_orders" / "orders_extra.jsonl"
+    extra = jsonl(extra_path) if extra_path.exists() else []
+    out = {}
+    for drive in ("strong", "gentle"):
+        sel = [r for r in rows if r["drive"] == drive]
+        gammas = sorted({r["gamma"] for r in sel})
+        seeds = sorted({r["seed"] for r in sel})
+        by = {(r["seed"], r["gamma"]): r for r in sel}
+        more = [r for r in extra if r["drive"] == drive]
+        line_by = dict(by)
+        line_by.update({(r["seed"], r["gamma"]): r for r in more})
+        line_gammas = sorted({g for _, g in line_by})
+        rec = {"gamma": gammas, "line_gamma": line_gammas, "seeds": seeds}
+        for key in ("size", "single", "mean_order", "range"):
+            rec[key] = [[line_by[(s, g)][key] for g in line_gammas] for s in seeds]
+        rec["heat_mean_order"] = [[by[(s, g)]["mean_order"] for g in gammas] for s in seeds]
+        # order shares of the first reservoir on a common logarithmic grid of orders
+        grid = np.unique(np.round(np.geomspace(1, 4096, 49)).astype(int))
+        heat = []
+        for g in gammas:
+            r = by[(seeds[0], g)]
+            edges, binned = np.array(r["edges"]), np.array(r["binned"])
+            per_order = np.zeros(int(edges[-1]))
+            for e0, e1, value in zip(edges[:-1], edges[1:], binned):
+                per_order[e0 - 1:e1 - 1] = value / (e1 - e0)
+            cum = np.r_[0.0, np.cumsum(per_order)]
+            # share in [grid_i, grid_{i+1}) divided by the log-width of the bin
+            lo = np.minimum(grid[:-1] - 1, len(per_order))
+            hi = np.minimum(grid[1:] - 1, len(per_order))
+            share = cum[hi] - cum[lo]
+            heat.append((share / np.log(grid[1:] / grid[:-1])).tolist())
+        rec["order_grid"] = grid.tolist()
+        rec["order_density"] = heat
+        out[drive] = rec
+    coh = json.loads((RES / "spin_orders" / "coherence.json").read_text())["rows"]
+    gammas = sorted({r["gamma"] for r in coh})
+    seeds = sorted({r["seed"] for r in coh})
+    by = {(r["seed"], r["gamma"]): r for r in coh}
+    out["coherence"] = {"gamma": gammas, "seeds": seeds,
+                        "kept": [[by[(s, g)]["recovered"]["signal_variance"] for g in gammas] for s in seeds],
+                        "erased": [[by[(s, g)]["dephased"]["signal_variance"] for g in gammas] for s in seeds]}
+    return out
+
+
+def law_block():
+    base = RES / "order_law"
+    out = {"one": {}, "beta": {}, "families": []}
+    rates = json.loads((base / "order_results.json").read_text())
+    with np.load(base / "family_22001.npz") as fam:
+        for p in (0.03, 0.01, 0.003):
+            out["one"][f"{p:g}"] = fam[f"{p}_basis_scalar_survival"][:400].round(6).tolist()
+            out["beta"][f"{p:g}"] = [r["beta"] for r in rates if r["seed"] == 22001 and r["reset"] == "basis"
+                                     and r["readout"] == "scalar" and abs(r["p"] - p) < 1e-12][0]
+    for f in sorted(base.glob("family_*.npz")):
+        with np.load(f) as fam:
+            for reset in ("basis", "random"):
+                for readout in ("full", "scalar"):
+                    key = f"0.001_{reset}_{readout}"
+                    x, y = fam[key + "_x"], fam[key + "_survival"]
+                    sel = x <= 4.2
+                    out["families"].append({"x": x[sel][::3].round(5).tolist(), "y": y[sel][::3].round(6).tolist()})
+    return out
+
+
+def mean_rate(r, n):
+    return float(np.mean(np.array(r["rates"])[:n]))
+
+
+def review_block(kernel):
+    """Runs added for the reviews: scaled input, slow modes up to large loss, local dephasing, signal size."""
+    base = RES / "review_runs"
+    out = {}
+    if (base / "scaled.jsonl").exists():
+        rows = jsonl(base / "scaled.jsonl")
+        out["scaled"] = {}
+        for gc in sorted({r["gamma_c"] for r in rows}):
+            sel = [r for r in rows if r["gamma_c"] == gc]
+            gammas = sorted({r["gamma"] for r in sel})
+            seeds = sorted({r["seed"] for r in sel})
+            by = {(r["seed"], r["gamma"]): r for r in sel}
+            get = lambda f: [[f(by[(s, g)]) if (s, g) in by else None for g in gammas] for s in seeds]
+            out["scaled"][f"{gc:g}"] = {
+                "gamma": gammas, "eta": [by[(seeds[0], g)]["eta"] for g in gammas],
+                "recall": get(lambda r: float(np.sum(r["memory"]))),
+                "forget": get(lambda r: 1.0 / (DT * mean_rate(r, 99))),
+                "var_mean": get(lambda r: r["feature_var_mean"]), "var_max": get(lambda r: r["feature_var_max"])}
+    if (base / "spectrum.jsonl").exists():
+        rows = jsonl(base / "spectrum.jsonl")
+        out["far"] = {}
+        for fam in FAMILIES:
+            sel = [r for r in rows if r["design"] == fam]
+            if not sel:
+                continue
+            slow = max(kernel[fam] - 1, 1)
+            gammas = sorted({r["gamma"] for r in sel})
+            seeds = sorted({r["seed"] for r in sel})
+            by = {(r["seed"], r["gamma"]): r for r in sel}
+            out["far"][fam] = {"gamma": gammas,
+                               "forget": [[1.0 / (DT * mean_rate(by[(s, g)], slow)) if (s, g) in by else None
+                                           for g in gammas] for s in seeds],
+                               "gamma_rate": [[g * mean_rate(by[(s, g)], slow) if (s, g) in by else None
+                                               for g in gammas] for s in seeds]}
+    if (base / "dephasing.jsonl").exists():
+        rows = jsonl(base / "dephasing.jsonl")
+        out["dephasing"] = [{"seed": r["seed"], "gamma": r["gamma"], "dephasing": r["dephasing"],
+                             "rate": mean_rate(r, 99)} for r in rows]
+    if (base / "variance.jsonl").exists():
+        rows = list({(r["seed"], r["design"], r["gamma"]): r for r in jsonl(base / "variance.jsonl")}.values())
+        out["variance"] = {}
+        for fam in ("shared", "signed"):
+            sel = [r for r in rows if r["design"] == fam]
+            gammas = sorted({r["gamma"] for r in sel})
+            out["variance"][fam] = {"gamma": gammas,
+                                    "var_mean": [float(np.mean([r["feature_var_mean"] for r in sel if r["gamma"] == g]))
+                                                 for g in gammas],
+                                    "var_max": [float(np.mean([r["feature_var_max"] for r in sel if r["gamma"] == g]))
+                                                for g in gammas]}
+    return out
+
+
+def v1_block():
+    """Finite-sampling test of the first version: memory minus local loss against preparations per step."""
+    agg = json.loads((RES / "measurement_full_v3" / "measurement_full_aggregate.json").read_text())
+    names = {"B3_collective": "shared", "B5_pair": "pair", "B4_loss_exchange": "exchange", "B2_thermal": "gainloss"}
+    out = {}
+    for model in ("independent", "grouped"):
+        rec = {}
+        for channel, fam in names.items():
+            sel = [r for r in agg["paired_vs_local"] if r["measurement_model"] == model and r["channel"] == channel]
+            finite = sorted((r for r in sel if not r["is_exact"]), key=lambda r: r["total_shots_per_time_step"])
+            exact = [r for r in sel if r["is_exact"]][0]
+            rec[fam] = {"budget": [r["total_shots_per_time_step"] for r in finite],
+                        "mean": [r["mean"] for r in finite], "lo": [r["ci95_low"] for r in finite],
+                        "hi": [r["ci95_high"] for r in finite],
+                        "exact": [exact["mean"], exact["ci95_low"], exact["ci95_high"]]}
+        out[model] = rec
+    return out
+
+
+def main():
+    kernel = {r["design"]: r["kernel"] for r in jsonl(RES / "jump_families" / "kernel.jsonl")}
+    snap = {"kernel": kernel, "memory": memory_block(kernel), "spectrum": spectrum_block(),
+            "removal": removal_block(), "write": write_block(), "spin": spin_block(), "law": law_block(),
+            "v1": v1_block(), "review": review_block(kernel)}
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(snap, separators=(",", ":")) + "\n")
+    done = {f: snap["memory"][f]["complete"] for f in snap["memory"]}
+    print(f"wrote {OUT} ({OUT.stat().st_size / 1e3:.0f} kB); complete: {done}")
+
+
+if __name__ == "__main__":
+    main()

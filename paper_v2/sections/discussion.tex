@@ -1,0 +1,39 @@
+\section{Discussion}
+Engineering the jump operators turns dissipation from a clock into a design layer. At equal total coupling the
+choice of jumps decides whether stronger dissipation erases memory or protects it, and one structural property
+fixes the answer: the operators that the dissipator leaves alone. Local loss, exchange and gain/loss leave a
+single stationary state, so more loss means faster forgetting. Shared and pairwise loss leave dark subspaces,
+so more loss means slower forgetting as long as the input does not scramble them itself. The memory of single
+inputs then grows with the loss, and its signal keeps a constant size when the input amplitude is scaled down with
+the leakage. Dephasing protects populations that the input never reaches.
+
+Three design rules follow for the reservoirs we studied. First, choose jump operators with a dark subspace, so that
+the loss rate sets the memory time. Second, let the input reach this subspace directly; the relative phases of a
+shared channel and of the input decide this, and an input that reaches it only through bright states writes a signal
+that shrinks as the loss grows. Third, scale the input amplitude down: keep the mixing fraction of one input times the
+memory time of order one, so that as the protection grows the input amplitude falls as the square root of the
+leakage. The second and third rules form one trade-off: direct access gives a large signal, and the scaled amplitude
+keeps it unmixed.
+
+The results have limits. The mixing law assumes rotation-like inputs, slow resetting and a single way in which
+stored signals spread; with two independent sectors one observable can show two order scales (Appendix~\ref{app:law}). The
+spin results concern reservoirs of five and three spins with specified Hamiltonians, and memory means what a
+linear readout of exact expectation values recovers. Exact expectation values stand for averages over many
+repeated runs. Three measurement settings, with all spins read along $X$, $Y$ or $Z$, give all 45 features, and a
+feature whose signal has variance $v$ needs at least about $1/v$ shots per setting and step. With a scaled input
+amplitude $v$ stays roughly constant as the loss grows, near $5\times10^{-6}$ for an average feature of the five-spin
+reservoir, which asks for about $2\times10^5$ shots per setting and step; with the uniform input of a shared channel it
+shrinks, so the shots needed grow too (Methods). In the first version of this study, finite sampling hid the advantage of the shared
+channel below about $2\times10^5$ preparations per step (Appendix~\ref{app:v1}). Extra local noise caps the gain.
+Local loss at rate $\gamma_{\mathrm{loc}}$ limits the memory time to about $1/(b\gamma_{\mathrm{loc}}\Delta t)$ steps,
+with $b\approx1.41$, so a memory of $T$ steps needs collective loss at least about $4T^2$ times stronger than local
+loss. Local dephasing acts the same way, with $b_\phi\approx4.07$, so a memory of $T$ steps then needs a ratio of
+about $12T^2$ (Methods). In a waveguide, a dark state of four transmons has been shown to live more than a hundred
+times longer than a single qubit decaying into the guide~\cite{Zanner2022}; read as $\gamma/\gamma_{\mathrm{loc}}$, a
+ratio of 100 allows a memory of about five steps, and every factor of four doubles it. A generic common bath need not realize the
+engineered channels; shared resonators, waveguides and structured couplers suggest how they can be
+built~\cite{Cattaneo2019,Brehm2021,Sheremet2023,CattaneoPRX2023}. How protection combines with non-Markovian
+memory~\cite{Sannia2026Memory} is an open question.
+
+For temporal quantum processing, the way a reservoir forgets is part of how it computes. Engineered well,
+dissipation is not only where a quantum reservoir loses its past; it is also where it keeps it.

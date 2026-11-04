@@ -1,4 +1,50 @@
-# The Organization of Environmental Coupling Shapes What Quantum Reservoirs Remember
+# Stronger dissipation, longer memory: engineering the jump operators of quantum reservoirs
+
+Manuscript source, code and data for version 2 of [arXiv:2608.14181](https://arxiv.org/abs/2608.14181).
+Version 1, *The Organization of Environmental Coupling Shapes What Quantum Reservoirs Remember*, is kept
+unchanged in `paper/` and described further below.
+
+- [Read the paper](paper_v2/dissipation_qrc.pdf) (source in `paper_v2/`)
+- Data behind every figure: `paper_v2/data/snapshot.json`; raw records: `paper_v2/data/raw_results.tar.gz`
+- Interval certificates of the three-spin limits: `paper_v2/certificates/spin_certificates.zip`
+  (also attached to the PDF)
+
+All quantities are exact expectation values; every run uses eight fixed seeds.
+
+## Reproduce
+
+```bash
+python -m pip install -r requirements.txt     # numpy, scipy, matplotlib; figures also need LaTeX
+python paper_v2/figures/make_figures.py       # Figs. 2-6 from paper_v2/data/snapshot.json
+cd paper_v2/figures && pdflatex fig1_concept.tex && cd ../..   # Fig. 1 (TikZ)
+cd paper_v2 && latexmk -pdf dissipation_qrc.tex && cd ..       # the paper
+```
+
+To rebuild the snapshot from the raw records, unpack them at the repository root and export:
+
+```bash
+tar -xzf paper_v2/data/raw_results.tar.gz     # creates results/...
+python paper_v2/figures/export_snapshot.py
+```
+
+The raw records come from these scripts (each one documents its stages; they run for minutes to hours):
+
+| Script | Content |
+|---|---|
+| `experiments/run_dark_projection.py` | five-spin memory, spectra, dark-state model, erasure, writing, added local loss |
+| `experiments/run_jump_families.py` | exchange, gain/loss and dephasing families; protected operators |
+| `experiments/run_review_runs.py` | scaled input, slow modes up to large loss, local dephasing, signal size |
+| `experiments/run_leak_size.py` | leak coefficient of a shared channel at three to six spins |
+| `experiments/run_spin_orders.py` | three-spin order shares at fixed and scaled amplitude |
+| `experiments/theory/order_law/reconstruct.py` | exact check of the mixing law (Fig. 5) |
+| `experiments/run_measurement_full.py` | finite sampling of the first version (Fig. 6) |
+
+The interval programs, the independent finite-rate check and the coherence test of Appendix C are inside the
+certificate archive; its `README.txt` explains how to run them.
+
+---
+
+# First version: The Organization of Environmental Coupling Shapes What Quantum Reservoirs Remember
 
 Research code, manuscript source, and checksum-sealed numerical artifacts for
 the Quantum manuscript **“The Organization of Environmental Coupling Shapes

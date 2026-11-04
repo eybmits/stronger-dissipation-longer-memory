@@ -1,0 +1,128 @@
+\section{Methods}
+
+\subsection{Five-spin simulations}
+Each reservoir draws its couplings and its input stream from one seed, and every family uses the same eight
+seeds. Equation~\eqref{eq:lindblad} is integrated in the 1024-dimensional basis of Pauli operators. The input is
+constant within a step, and the step map $E(u)=e^{\Delta t\mathcal L(u)}$ is evaluated by Chebyshev interpolation
+in $u$ at ten nodes. After a washout of $\max(800,60\gamma)$ steps we record the 45 features for 2000 training,
+400 validation and 1600 test inputs. The readout is a least-squares fit with an intercept on the training and
+validation inputs, and $C_\tau$ is the squared correlation of its estimate with $u_{t-\tau}$ on the test inputs.
+All features are exact expectation values. Runs at $\gamma=128$ and 256 use the same seeds. There the recall of
+one and two shared channels at a fixed amplitude reaches past the 300 delays we sum over (the time to forget of the
+shared channel is about 200 steps at $\gamma=256$), so Fig.~\ref{fig:families}b shows them up to $\gamma=64$. The recall of
+mixed phases and pairwise loss ends well within the window, and their memory falls to about 10 at $\gamma=256$. Capacities by
+polynomial degree follow Ref.~\cite{Dambre2012}: products of Legendre polynomials in the past inputs $2u-1$, up to
+total degree four within finite delay windows, fitted by the same features and kept above a shuffled-input noise
+floor. At $\gamma=1$ degrees three and four carry 8.2 units with one shared channel, 15.9 with mixed phases and 16.4
+with local loss.
+
+For the scaled input we replace $h(1+u)$ in Eq.~\eqref{eq:H} by $h[\tfrac32+\eta(u-\tfrac12)]$ with
+$\eta=\min(1,\gamma^{-1/2})$, which keeps the mean field and scales the input amplitude. With mixed phases the
+variance of a feature over the test inputs, averaged over the 45 features, then stays near $5\times10^{-6}$ from
+$\gamma=16$ to 256, and from $\gamma=32$ on the largest is about $2\times10^{-5}$. Meanwhile the recall of the last
+input falls from 0.95 at $\gamma=64$ to 0.57 at $\gamma=256$ and spreads to longer delays; beyond delay 300 it would
+add about 1\% of the memory on average. With $\eta=\min(1,2\gamma^{-1/2})$ the features vary
+3.5 times more, and the memory is smaller, 29 instead of 34 at $\gamma=64$, consistent with stronger mixing. At a fixed amplitude the mean feature
+variance of the equal-phase shared channel falls from $2\times10^{-4}$ at $\gamma=1$ to $4\times10^{-7}$ at $\gamma=64$
+and $3\times10^{-8}$ at $\gamma=256$, while that of mixed phases stays near $8\times10^{-5}$ from $\gamma=16$ on.
+
+\subsection{Jump families and equal coupling}
+Table~\ref{tab:families} lists the jump operators. Their weights give every family the same total coupling
+$\Tr K=\sum_k\Tr L_k^\dagger L_k=N2^{N-1}\gamma=80\gamma$; the mixtures for exchange and gain/loss follow the first
+version of this study. For a traceless jump the superoperator trace of the dissipator is
+$\Tr\mathcal D[L]=|\Tr L|^2-2^N\Tr L^\dagger L=-2^N\Tr L^\dagger L$, while the commutator with any Hamiltonian is
+traceless. The $4^N$ eigenvalues $\lambda$ of the generator therefore obey
+\begin{equation}
+  \frac{1}{4^N}\sum\operatorname{Re}\lambda=-\frac{\Tr K}{2^N}
+\end{equation}
+for every family and every Hamiltonian. The protected operators form the kernel of the unit-rate dissipator,
+which we compute numerically (Fig.~\ref{fig:dark}a).
+
+\begin{table}[b]
+\caption{\label{tab:families}Jump families at $N=5$, each with $\Tr K=80\gamma$, and the number of operators
+that the dissipator leaves unchanged; $i<j$ for pairwise loss, $i\neq j$ for exchange and $c=(1,1,1,-1,-1)$.}
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lll}
+\toprule
+family & jump operators & protected\\\midrule
+local & $\sqrt\gamma\,\sigma_i^-$ & 1\\
+shared & $\sqrt\gamma\sum_i\sigma_i^-$ & 100\\
+mixed phases & $\sqrt\gamma\sum_ic_i\sigma_i^-$ & 100\\
+two channels & $\sqrt\gamma\sum_{i\le3}\sigma_i^-$, $\sqrt\gamma\sum_{i>3}\sigma_i^-$ & 36\\
+pairwise & $\sqrt\gamma\,\sigma_i^-\sigma_j^-$ & 36\\
+exchange & $\sqrt{0.4\gamma}\,\sigma_i^-$, $\sqrt{0.3\gamma}\,\sigma_i^-\sigma_j^+$ & 1\\
+gain/loss & $\sqrt{\gamma/1.3}\,\sigma_i^-$, $\sqrt{0.3\gamma/1.3}\,\sigma_i^+$ & 1\\
+dephasing & $\sqrt{\gamma/2}\,\sigma_i^z$ & 32\\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+\subsection{Slow modes}
+The input-averaged step $\bar E=\mathbb E_uE(u)$ is computed by six-point Gauss--Legendre quadrature. Its
+eigenvalues $\lambda_j$ give decay rates $\kappa_j=-\ln|\lambda_j|/\Delta t$. If the dissipator protects $n$
+operators, the slow modes are the $n-1$ slowest decaying ones besides the stationary state, and the time to
+forget is $t_{\mathrm f}=1/(\Delta t\,\bar\kappa)$ with $\bar\kappa$ their mean rate. Without protected operators we
+use the slowest mode. For one shared channel $\gamma\bar\kappa=a=2.945$ to four digits from $\gamma=512$ to
+16384, so $t_{\mathrm f}$ grows fourfold from $\gamma=4096$ to 16384, while it changes from 56 to 58 steps with mixed
+phases and from 103 to 114 with pairwise loss. The same second-order calculation as in Eq.~\eqref{eq:reduced}, which
+gives $a=2.945$ at five spins, gives $a=1.4$, 2.1 and 3.4 at three, four and six spins (mean over the same eight
+coupling seeds), so the leak coefficient grows only slowly with the size. Adding local loss
+$\sqrt{\gamma_{\mathrm{loc}}}\,\sigma_i^-$ gives $\bar\kappa=a/\gamma+b\gamma_{\mathrm{loc}}$. To first order in
+$\gamma_{\mathrm{loc}}$, $b$ is the trace of the added dissipator on the 99 slow dark modes divided by 99,
+$b=140/99\approx1.414$. Local dephasing
+$\sqrt{\gamma_\phi}\,\sigma_i^z$ (the dephasing family of Table~\ref{tab:families} has $\gamma_\phi=\gamma/2$) adds
+$b_\phi\gamma_\phi$ in the same way, with $b_\phi=403.2/99\approx4.073$ to first order.
+For $\gamma$ from 32 to 256 and noise rates from 0.001 to 0.1 the full spectra reproduce both coefficients to within
+0.2\%. A time to forget of at least $T$ steps needs $a/\gamma+b\gamma_{\mathrm{loc}}\le1/(\Delta t\,T)$, which is
+possible only if $\gamma/\gamma_{\mathrm{loc}}\ge4ab\,\Delta t^2T^2\approx4.2\,T^2$; for dephasing the bound is
+$4ab_\phi\Delta t^2T^2\approx12\,T^2$.
+
+\subsection{Dark-state model and erasure}
+Let $\mathcal D$ be the unit-rate dissipator, $\mathcal P=\lim_{t\to\infty}e^{t\mathcal D}$ the projector onto its
+kernel and $\mathcal S=(\mathcal D+\mathcal P)^{-1}-\mathcal P$ the inverse on the decaying operators. Write
+$\mathcal P=RR^\flat$ with $R^\flat R=1$, where $R$ embeds the 100 dark coordinates $\alpha$. Eliminating the
+decaying operators to second order gives Eq.~\eqref{eq:reduced} for $\alpha$, and the full state is
+$(R-\mathcal S\mathcal H(u)R/\gamma)\,\alpha$, which we feed to the same readout. Nothing is fitted. For the erasure
+test we replace the dark coordinates after every step by their time average, $r\mapsto r-RR^\flat(r-\bar r)$; the
+control erases the dark subspace rotated by a random product of single-spin unitaries. Recall is then measured at
+delays 1 to 100 with 800 training, 200 validation and 800 test inputs. The write per input is
+$2\|R^\flat[E(\tfrac34)-E(\tfrac14)]r_*\|$ at the stationary state $r_*$ of the equal-phase channel, for the
+input patterns $(1,\dots,1)$ and $\sqrt2\cos(2\pi i/5)$ multiplying $X_i$. Along the phases it falls as $1/\gamma$,
+to 0.003 at $\gamma=128$; across them it stays of order one, 0.18 at $\gamma=128$.
+
+\subsection{Order of a memory}
+For independent signs $u_t=\pm1$ the products $\prod_{j\in J}u_{t-j}$ over finite sets $J$ of delays are
+orthonormal and complete; their order is $|J|$. For continuous inputs one uses orthogonal polynomials in each
+input, and any centred function of one input has order one. Quantum channels act affinely on traceless
+coordinates~\cite{MartinezPenaOrtega2023,MartinezPenaOrtega2025}, $r_t=A(u_t)r_{t-1}+b(u_t)$. Let $\bar A=\mathbb EA$,
+$m$ the stationary mean and $\xi=A(u)m+b(u)-m$ the innovation, with covariance $V$. With
+$\mathcal BX=\bar AX\bar A^{\mathsf T}$, $\mathcal TX=\mathbb E[AXA^{\mathsf T}]$ and $\mathcal K=\mathcal T-\mathcal B$, the
+covariance $G_k$ carried by products of order $k$ obeys
+\begin{equation}
+  G_1=(1-\mathcal B)^{-1}V,\qquad G_{k+1}=(1-\mathcal B)^{-1}\mathcal KG_k ,
+  \label{eq:recursion}
+\end{equation}
+because the mean step moves a stored product without adding a time, the fluctuating step multiplies it by the
+current input, and the innovation adds the current input alone. The $G_k$ add up to the stationary covariance
+$\Sigma$. A readout of features $y=Mx$ explains the share $C_k=\Tr[(M\Sigma M^{\mathsf T})^+MG_kM^{\mathsf T}]$ of
+order $k$, and these shares add up to the rank of the readout~\cite{Dambre2012}. For one observable $a$,
+$C_k=a^{\mathsf T}G_ka/a^{\mathsf T}\Sigma a$, and the share of single past inputs is
+$a^{\mathsf T}\bar AG_1\bar A^{\mathsf T}a/a^{\mathsf T}\Sigma a$.
+
+\subsection{Three-spin computations}
+The three spins evolve under
+\begin{equation}
+  H_\eta(u)=\sum_{i<j}J_{ij}X_iX_j+\tfrac12\sum_iZ_i+\tfrac{3+\eta u}{4}\sum_iX_i
+  \label{eq:H3}
+\end{equation}
+with one jump $\sqrt\gamma\,(\sigma_1^--\sigma_2^--\sigma_3^-)$, steps of $\Delta t=1/2$ and signs $u=\pm1$, at
+$\eta=1$ (fixed amplitude) or $\eta=8/\sqrt\gamma$ (scaled amplitude). The dark subspace has three states. The couplings of the four
+Hamiltonians H1--H4 are drawn from fixed seeds. For each loss rate we exponentiate the full generator for both
+signs, solve the stationary moment equations and evaluate Eq.~\eqref{eq:recursion} for $X_1$ until 99.99\% of its
+memory is accounted for; there is no sampling. The range $\tau_{90}$ is the smallest delay beyond which less than a
+tenth of the recall remains. For the coherence test we apply the loss-only projector $\mathcal P$ after every
+step; one arm keeps the recovered state, the other also dephases it in the energy basis of the projected
+Hamiltonian. From $\gamma=2^8$ to $2^{18}$ the variance of $X_1$ stays between $10^{-4}$ and $2\times10^{-3}$ when the
+coherences are kept and falls as $\gamma^{-2}$, by six orders of magnitude, when they are erased; at a fixed input
+amplitude it falls as $1/\gamma$.
