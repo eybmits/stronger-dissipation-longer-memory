@@ -35,25 +35,19 @@ Its recall $C_\tau\in[0,1]$ is the squared correlation between the estimate and 
 held-out data, and the memory $\sum_\tau C_\tau$ sums it over delays up to 300. All expectation values are
 exact; there is no shot noise.
 
-\begin{figure*}[t]
+\begin{figure}[!tb]
 \centering
-\includegraphics[width=\textwidth]{figures/fig2_families.pdf}
+\includegraphics[width=\columnwidth]{figures/fig2_families.pdf}
 \caption{\textbf{The jump operators decide whether stronger dissipation erases or protects memory.}
-Five-spin reservoirs at equal total coupling; lines and shading are the mean and the 16th--84th percentiles
-over eight reservoirs.
-\textbf{a}~Recall $C_\tau$ of the input $\tau$ steps back, for local loss and one shared channel at weak
-($\gamma=1/4$, light) and strong ($\gamma=64$, dark) loss; mean over eight reservoirs.
-\textbf{b}~Memory $\sum_\tau C_\tau$ for all jump families at a fixed input amplitude; one and two shared channels are
-shown up to $\gamma=64$, beyond which their recall outgrows the 300 delays summed (Methods), mixed phases and pairwise
-loss up to $\gamma=256$. Dash-dotted with circles, up to $\gamma=256$: mixed phases with the input amplitude scaled as
-$\min(1,\gamma^{-1/2})$. Dashed: the limit of 45 set by the 45 features.
-\textbf{c}~Time to forget, from the decay rates of the slow modes of the input-averaged step. Without protected
-operators it falls as $1/\gamma$. With dark states it grows in proportion to $\gamma$ when the input cannot reach them
-directly; with mixed phases and pairwise loss it levels off, unless the input amplitude is scaled down
-(dash-dotted, mixed phases).
-Dephasing protects populations into which the input never writes, so its memory in \textbf{b} is zero.}
+Five spins at equal total coupling; mean and 16th--84th percentiles over eight reservoirs.
+\textbf{a}~Recall of the input $\tau$ steps back at weak ($\gamma=1/4$, light) and strong ($\gamma=64$, dark) loss.
+\textbf{b}~Memory at a fixed input amplitude; one and two shared channels stop at $\gamma=64$, where their recall
+outgrows the 300 delays summed (Methods). Dash-dotted with circles: mixed phases with the input amplitude scaled as
+$\min(1,\gamma^{-1/2})$; dashed: the limit set by the 45 features.
+\textbf{c}~Time to forget, from the slow modes of the input-averaged step. Dephasing protects populations into which
+the input never writes, so its memory in \textbf{b} is zero.}
 \label{fig:families}
-\end{figure*}
+\end{figure}
 
 \subsection{Stronger dissipation, opposite consequences}
 Figure~\ref{fig:families} shows the result. At weak dissipation all families behave alike, as the equal
@@ -104,9 +98,9 @@ nothing fitted, reproduces the recall of the full reservoir from $\gamma\approx4
 (Fig.~\ref{fig:dark}c). Erasing the dark coordinates after every step removes all memory beyond a few
 steps, while erasing a rotated copy of the same dimension leaves most of it (Fig.~\ref{fig:dark}d).
 
-\begin{figure*}[t]
+\begin{figure}[!tb]
 \centering
-\includegraphics[width=\textwidth]{figures/fig3_dark.pdf}
+\includegraphics[width=\columnwidth]{figures/fig3_dark.pdf}
 \caption{\textbf{Dark states hold the memory.}
 \textbf{a}~Number of operators that each unit-rate dissipator leaves unchanged, at five spins (open circle:
 populations only).
@@ -117,7 +111,7 @@ with nothing fitted; mean of eight reservoirs.
 \textbf{d}~Recall at $\gamma=16$ when the dark coordinates, or a copy of the dark subspace rotated by random
 single-spin unitaries, are erased after every step; mean and 16th--84th percentiles over eight reservoirs.}
 \label{fig:dark}
-\end{figure*}
+\end{figure}
 
 \subsection{The price of protection}
 A long memory is not automatically a useful one. Every input turns the stored state a little, and the turn
@@ -178,8 +172,8 @@ amplitude must fall as the square root of the leakage.
 fixed $\theta^2/\epsilon$: size of the stored signal (normalized to its maximum at $\theta^2/\epsilon=2/\sqrt3$, dotted)
 and share of single past inputs (dashed).
 \textbf{b,c}~Three-spin reservoir with one shared channel of mixed phases (Hamiltonian H3): share of the memory of
-$X_1$ carried by products of $k$ inputs, per unit $\ln k$, at $\gamma=2^4$, $2^7$, $2^{10}$, $2^{13}$ and $2^{16}$ (light
-to dark), for a fixed input amplitude (b) and for an amplitude scaled as $8/\sqrt\gamma$ (c).}
+$X_1$ carried by products of $k$ inputs, per unit $\ln k$, for a fixed input amplitude (b) and for an amplitude
+scaled as $8/\sqrt\gamma$ (c); dashed: mean order.}
 \label{fig:writing}
 \end{figure}
 

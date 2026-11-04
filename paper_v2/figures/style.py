@@ -1,6 +1,6 @@
 """Figure style of the paper.
 
-Figures are drawn at their printed width (REVTeX two-column: 246 pt column, 510 pt page) and
+Figures are drawn at their printed width (one column of the Quantum class) and
 typeset by LaTeX in Helvetica with sans-serif mathematics. Panels carry a bold letter and a
 bold title above the top-left corner. One colour stands for one jump family throughout:
 warm colours for families without a protected subspace, cool colours for families with one.
@@ -43,6 +43,8 @@ NAME = {
     "pair": "pairwise", "signed": "mixed phases", "groups": "two channels", "shared": "shared",
 }
 STRONG, GENTLE, ERASED = "#9c6644", "#2d6a4f", "#8c8c8c"
+# one set of sizes for every figure: data lines, guide lines, markers, text inside panels
+LW, LW_GUIDE, MS, TXT = 1.8, 1.0, 4.0, 7.4
 # families without protected operators dashed, dephasing dotted, families with dark states solid
 DASH = {"separate": (0, (4, 1.6)), "exchange": (0, (4, 1.6)), "gainloss": (0, (4, 1.6)),
         "dephasing": (0, (1.2, 1.4)), "pair": "-", "signed": "-", "groups": "-", "shared": "-"}
@@ -61,15 +63,15 @@ mpl.rcParams.update({
                            # subsets Type 1 fonts; take the minus from the text font instead
                            r"\DeclareMathSymbol{-}{\mathbin}{operators}{123}",
     "font.family": "sans-serif",
-    "font.size": 7.5, "axes.labelsize": 7.5, "axes.titlesize": 7.5,
-    "xtick.labelsize": 7, "ytick.labelsize": 7, "legend.fontsize": 6.8,
+    "font.size": 8.2, "axes.labelsize": 8.2, "axes.titlesize": 8.2,
+    "xtick.labelsize": 7.6, "ytick.labelsize": 7.6, "legend.fontsize": 7.2,
     "text.color": INK, "axes.labelcolor": INK, "axes.edgecolor": INK, "xtick.color": INK, "ytick.color": INK,
-    "axes.linewidth": 0.6, "axes.grid": False, "axes.axisbelow": True,
+    "axes.linewidth": 0.8, "axes.grid": False, "axes.axisbelow": True,
     "xtick.direction": "in", "ytick.direction": "in", "xtick.top": True, "ytick.right": True,
-    "xtick.major.size": 2.8, "ytick.major.size": 2.8, "xtick.minor.size": 1.5, "ytick.minor.size": 1.5,
-    "xtick.major.width": 0.6, "ytick.major.width": 0.6, "xtick.minor.width": 0.45, "ytick.minor.width": 0.45,
-    "xtick.major.pad": 2.4, "ytick.major.pad": 2.4, "axes.labelpad": 2.0,
-    "lines.linewidth": 1.2, "lines.markersize": 3.2, "lines.markeredgewidth": 0.6, "patch.linewidth": 0.5,
+    "xtick.major.size": 3.4, "ytick.major.size": 3.4, "xtick.minor.size": 1.9, "ytick.minor.size": 1.9,
+    "xtick.major.width": 0.8, "ytick.major.width": 0.8, "xtick.minor.width": 0.6, "ytick.minor.width": 0.6,
+    "xtick.major.pad": 2.6, "ytick.major.pad": 2.6, "axes.labelpad": 2.4,
+    "lines.linewidth": 1.8, "lines.markersize": 4.0, "lines.markeredgewidth": 0.9, "patch.linewidth": 0.6,
     "legend.frameon": True, "legend.framealpha": 0.92, "legend.edgecolor": RULE, "legend.fancybox": False,
     "legend.borderpad": 0.35, "legend.handlelength": 1.6, "legend.handletextpad": 0.5, "legend.labelspacing": 0.3,
     "axes.unicode_minus": False, "pdf.compression": 9, "savefig.dpi": 300,
@@ -95,7 +97,7 @@ def axes(fig, left, bottom, width, height):
 def panel(ax, letter, title="", dx=-22, dy=6):
     """Bold letter and bold title above the top-left corner of the axes (offsets in points)."""
     ax.annotate(rf"\textbf{{{letter}}}\hspace{{0.55em}}\textbf{{{title}}}", xy=(0, 1), xycoords="axes fraction",
-                xytext=(dx, dy), textcoords="offset points", ha="left", va="bottom", fontsize=8)
+                xytext=(dx, dy), textcoords="offset points", ha="left", va="bottom", fontsize=9)
 
 
 def decades(ax, axis="x", labels=None):
@@ -111,13 +113,14 @@ def decades(ax, axis="x", labels=None):
         a.set_minor_formatter(ticker.NullFormatter())
 
 
-def band(ax, x, rows, color, label=None, lw=1.2, alpha=0.18, marker=None, ls="-", **kw):
+def band(ax, x, rows, color, label=None, lw=None, alpha=0.15, marker=None, ls="-", **kw):
     """Mean over reservoirs with the range between the 16th and 84th percentiles."""
     rows = np.asarray(rows, float)
     mean = np.nanmean(rows, axis=0)
     lo, hi = np.nanpercentile(rows, 16, axis=0), np.nanpercentile(rows, 84, axis=0)
     ax.fill_between(x, lo, hi, color=color, alpha=alpha, lw=0)
-    ax.plot(x, mean, color=color, lw=lw, label=label, marker=marker, mfc="white", mec=color, ls=ls, **kw)
+    ax.plot(x, mean, color=color, lw=LW if lw is None else lw, label=label, marker=marker, mfc="white", mec=color,
+            ls=ls, **kw)
     return mean
 
 
