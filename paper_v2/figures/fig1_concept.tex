@@ -24,10 +24,10 @@
 \begin{document}
 \begin{tikzpicture}[x=1pt,y=1pt,
   font=\fontsize{7.4}{8.8}\selectfont, text=ink,
-  ttl/.style={anchor=base west,font=\fontsize{8}{9.6}\selectfont\bfseries},
+  ttl/.style={anchor=base west,font=\fontsize{8.6}{10.3}\selectfont\bfseries},
   head/.style={anchor=base,font=\fontsize{7.8}{9}\selectfont\bfseries},
-  small/.style={font=\fontsize{6.6}{7.8}\selectfont},
-  tiny/.style={font=\fontsize{6.1}{7}\selectfont},
+  small/.style={font=\fontsize{7}{8.2}\selectfont},
+  tiny/.style={font=\fontsize{6.6}{7.6}\selectfont},
   spin/.style={circle,minimum size=8.6pt,inner sep=0pt,shading=ball,ball color=#1!50!white},
   spin/.default=shared,
   bath/.style={rounded corners=1.6pt,fill=#1!10,draw=#1!60,line width=0.5pt},
@@ -154,13 +154,13 @@
 \node[anchor=south,small,text=ink2] at (65,59) {$H$};
 % inset: survival of the dark state, two spins with coupling H = g and shared loss gamma (time in 1/g)
 \begin{scope}[shift={(150,14)}]
-  \draw[ink3,line width=0.45pt] (0,54) -- (0,0) -- (78,0);
+  \draw[ink,line width=0.8pt] (0,54) -- (0,0) -- (78,0);
   \node[anchor=north east,tiny,text=ink3] at (78,-1.2) {time};
   \node[anchor=south west,tiny,text=ink2] at (-1,55) {population of $|{-}\rangle$};
   \begin{scope}[x=78pt,y=52pt]
-    \draw[shared!32,line width=1.1pt,line cap=round] plot[smooth] coordinates {(0.000,1.0000) (0.025,0.8277) (0.050,0.5413) (0.075,0.3112) (0.100,0.1648) (0.125,0.0825) (0.150,0.0397) (0.175,0.0185) (0.200,0.0084) (0.225,0.0037) (0.250,0.0016) (0.300,0.0003) (0.400,0.0000) (0.600,0.0000) (0.800,0.0000) (1.000,0.0000)};
-    \draw[shared!62,line width=1.1pt,line cap=round] plot[smooth] coordinates {(0.000,1.0000) (0.025,0.9092) (0.050,0.8013) (0.075,0.7057) (0.100,0.6216) (0.125,0.5474) (0.150,0.4821) (0.175,0.4246) (0.200,0.3740) (0.250,0.2901) (0.300,0.2250) (0.350,0.1745) (0.400,0.1354) (0.450,0.1050) (0.500,0.0814) (0.600,0.0490) (0.700,0.0295) (0.800,0.0177) (0.900,0.0107) (1.000,0.0064)};
-    \draw[shared,line width=1.1pt,line cap=round] plot[smooth] coordinates {(0.000,1.0000) (0.050,0.9412) (0.100,0.8841) (0.150,0.8305) (0.200,0.7801) (0.250,0.7328) (0.300,0.6884) (0.350,0.6466) (0.400,0.6074) (0.450,0.5706) (0.500,0.5360) (0.600,0.4729) (0.700,0.4173) (0.800,0.3682) (0.900,0.3249) (1.000,0.2867)};
+    \draw[shared!32,line width=1.8pt,line cap=round] plot[smooth] coordinates {(0.000,1.0000) (0.025,0.8277) (0.050,0.5413) (0.075,0.3112) (0.100,0.1648) (0.125,0.0825) (0.150,0.0397) (0.175,0.0185) (0.200,0.0084) (0.225,0.0037) (0.250,0.0016) (0.300,0.0003) (0.400,0.0000) (0.600,0.0000) (0.800,0.0000) (1.000,0.0000)};
+    \draw[shared!62,line width=1.8pt,line cap=round] plot[smooth] coordinates {(0.000,1.0000) (0.025,0.9092) (0.050,0.8013) (0.075,0.7057) (0.100,0.6216) (0.125,0.5474) (0.150,0.4821) (0.175,0.4246) (0.200,0.3740) (0.250,0.2901) (0.300,0.2250) (0.350,0.1745) (0.400,0.1354) (0.450,0.1050) (0.500,0.0814) (0.600,0.0490) (0.700,0.0295) (0.800,0.0177) (0.900,0.0107) (1.000,0.0064)};
+    \draw[shared,line width=1.8pt,line cap=round] plot[smooth] coordinates {(0.000,1.0000) (0.050,0.9412) (0.100,0.8841) (0.150,0.8305) (0.200,0.7801) (0.250,0.7328) (0.300,0.6884) (0.350,0.6466) (0.400,0.6074) (0.450,0.5706) (0.500,0.5360) (0.600,0.4729) (0.700,0.4173) (0.800,0.3682) (0.900,0.3249) (1.000,0.2867)};
   \end{scope}
   \node[anchor=south west,tiny,text=shared!45,inner sep=1pt] at (11,6) {$2$};
   \node[anchor=south west,tiny,text=shared!70,inner sep=1pt] at (28,10) {$8$};
