@@ -1,12 +1,14 @@
 """Figure style of the paper.
 
-Every data panel has the same size and sits on one grid, in TeX points (Quantum class, 17 cm text width, two columns
-of 231.9 pt with 20 pt between them): each text column holds two panels of about 71 x 66 pt, each with a 40 pt gutter
-on its left for its tick and axis labels, so a figure across the page holds four panels aligned with the text
-columns, and a panel may span both grid columns of a text column. Panels carry no titles: a bold letter sits at the
-left edge of each grid column, in a row above the axes, and x labels share one baseline within a row.
-All text is typeset by LaTeX in Latin Modern Roman at 10 pt, the size of the captions and the font of the text, with
-the mathematics of the text; keys that would crowd a panel sit in a band under the panels. One colour stands for one
+Figures across the page hold one row of four panels (fit_row): each gutter is as wide as the tick and axis labels of
+its panel need, panels that share an axis sit side by side, and the panels share the rest of the width, so that they
+are as large as the page allows; keys and colour scales sit inside the panels, in space the data leave free (inkey,
+inset_colour_key). The one-column figures of the appendix keep the older grid, in TeX points (Quantum class, 17 cm
+text width, two columns of 231.9 pt with 20 pt between them): each text column holds two panels of about 71 x 66 pt,
+each with a 40 pt gutter on its left, and their keys sit in a band under the panels. Panels carry no titles: a bold
+letter sits at the left edge of each panel's column, in a row above the axes, and x labels share one baseline within
+a row. All text is typeset by LaTeX in Latin Modern Roman at 10 pt, the size of the captions and the font of the
+text, with the mathematics of the text. One colour stands for one
 shape of the environment throughout: warm colours for shapes without a protected subspace, cool colours for shapes
 with one. Four shapes carry the story; where all eight share a panel, the other four are drawn in grey.
 """
@@ -137,6 +139,7 @@ SEP = 20.0                                  # separation of the two text columns
 COLUMN_PT = COLUMN / PT
 WP = (COLUMN_PT - 2 * G - RIGHT) / 2        # panel width, about 71 pt
 HP = 66.0                                   # panel height
+HP_ROW = 100.0                              # panel height of a row of four panels across the page (fit_row)
 
 
 def grid_x0(col):
@@ -156,6 +159,7 @@ def wide_figure(rows=1, keys=0, width=PAGE, letters=True, hp=None):
     fig.grid_top = height - top
     fig.hp = hp
     fig.below = below
+    fig.key_boxes = []                      # (label, (x0, y0, x1, y1) in points) of every key entry
     return fig
 
 
@@ -169,12 +173,51 @@ def wide_place(fig, col, span=1, row=0):
     return fig.add_axes([x0 / W, (y1 - hp) / Hf, (x1 - x0) / W, hp / Hf])
 
 
-def letter(ax, name, col):
-    """Bold letter at the left edge of the panel's grid column, in a row above the axes."""
+def letter(ax, name, col=None):
+    """Bold letter at the left edge of the panel's column (the grid column `col`, or the column fit_row gave the
+    panel), in a row above the axes."""
     fig = ax.figure
     W, Hf = fig.get_size_inches() / PT
     y = ax.get_position().y1 * Hf + RISE
-    fig.text((grid_x0(col) - G) / W, y / Hf, rf"\textbf{{{name}}}", ha="left", va="baseline", fontsize=TXT)
+    x = ax.gutter_x if col is None else grid_x0(col) - G
+    fig.text(x / W, y / Hf, rf"\textbf{{{name}}}", ha="left", va="baseline", fontsize=TXT)
+
+
+def _shown_labels(axis):
+    """Labels of the major ticks inside the view limits (matplotlib also labels the ticks beyond them, but does not
+    draw those)."""
+    lo, hi = sorted(axis.get_view_interval())
+    tol = 1e-9 * max(abs(lo), abs(hi))
+    locs = axis.get_majorticklocs()
+    return [t.label1 for t, x in zip(axis.get_major_ticks(len(locs)), locs) if lo - tol <= x <= hi + tol]
+
+
+def fit_row(fig, axes, weights, joined=(), margin=2.0, gap=6.0):
+    """Lay one row of panels across the figure: each gutter holds the tick and axis labels of its panel (and what the
+    panel before it lets stick out on the right) plus `margin` points; a panel in `joined` shares the y axis of the
+    panel before it and sits `gap` points from it; the panels share the rest of the width in proportion to
+    `weights`. Sets ax.gutter_x, the left edge of each panel's column, for its letter."""
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    W, Hf = _pts(fig)
+    ppt = fig.dpi * PT
+    left, right = [], []
+    for ax in axes:
+        box = ax.get_window_extent(r)
+        parts = [ax.xaxis.label, ax.yaxis.label] + _shown_labels(ax.xaxis) + _shown_labels(ax.yaxis)
+        ext = [t.get_window_extent(r) for t in parts if t.get_visible() and t.get_text()]
+        left.append(max([0.0] + [(box.x0 - e.x0) / ppt for e in ext]))
+        right.append(max([0.0] + [(e.x1 - box.x1) / ppt for e in ext]))
+    gutters = [gap if ax in joined else (right[i - 1] + left[i] + margin if i else left[i] + 0.5)
+               for i, ax in enumerate(axes)]
+    avail = W - sum(gutters) - right[-1] - 0.5
+    x = 0.0
+    for i, ax in enumerate(axes):
+        x += gutters[i]
+        p = ax.get_position()
+        ax.set_position([x / W, p.y0, avail * weights[i] / sum(weights) / W, p.height])
+        ax.gutter_x = x if ax in joined else x - left[i] - 0.5
+        x += avail * weights[i] / sum(weights)
 
 
 def column_figure(keys=0, height=None):
@@ -238,14 +281,20 @@ def key_baseline(fig, row):
     return fig.below - KEY_TOP - row * KEY_ROW
 
 
-def key(fig, x, entries, ncol=1, row=0, right=False):
+ASC, DESC = 7.0, 2.0                        # height of a 10 pt label above and below its baseline
+
+
+def key(fig, x, entries, ncol=1, row=0, right=False, y=None):
     """Entries in rows of `ncol` columns, the first handle at x points from the left edge of the figure (or, with
-    right=True, the end of the longest label of the last column at x); each column as wide as its longest label."""
+    right=True, the end of the longest label of the last column at x); each column as wide as its longest label.
+    The first row sits on the baseline y (points from the bottom of the figure), by default in the band under the
+    panels."""
     W, Hf = _pts(fig)
+    base = (lambda r: key_baseline(fig, r)) if y is None else (lambda r: y - (r - row) * KEY_ROW)
     texts = []
     for i, (handle, label) in enumerate(entries):
         r = row + i // ncol
-        texts.append(fig.text(0, key_baseline(fig, r) / Hf, label, ha="left", va="baseline", fontsize=TXT))
+        texts.append(fig.text(0, base(r) / Hf, label, ha="left", va="baseline", fontsize=TXT))
     fig.canvas.draw()
     rend = fig.canvas.get_renderer()
     widths = [t.get_window_extent(rend).width / fig.dpi / PT for t in texts]
@@ -253,12 +302,30 @@ def key(fig, x, entries, ncol=1, row=0, right=False):
     if right:
         x -= sum(colw) + ncol * (HANDLE + HANDLE_PAD) + (ncol - 1) * KEY_SEP
     x0 = [x + sum(colw[:c]) + c * (HANDLE + HANDLE_PAD + KEY_SEP) for c in range(ncol)]
-    for i, ((handle, _), t) in enumerate(zip(entries, texts)):
+    for i, ((handle, label), t) in enumerate(zip(entries, texts)):
         c, r = i % ncol, row + i // ncol
-        y = key_baseline(fig, r)
-        handle(fig, x0[c], x0[c] + HANDLE, y + MID)
+        yb = base(r)
+        handle(fig, x0[c], x0[c] + HANDLE, yb + MID)
         t.set_x((x0[c] + HANDLE + HANDLE_PAD) / W)
+        fig.key_boxes.append((label, (x0[c], yb - DESC, x0[c] + HANDLE + HANDLE_PAD + widths[i], yb + ASC)))
     return x0[-1] + HANDLE + HANDLE_PAD + colw[-1]
+
+
+def inkey(ax, entries, loc="upper left", ncol=1, pad=(4.5, 5.0), at=None):
+    """A key inside a panel, in the corner `loc` ('upper left', 'upper right', 'lower left' or 'lower right'), `pad`
+    points from the frame (across, up or down), or with that corner at `at` (axes fraction)."""
+    fig = ax.figure
+    W, Hf = _pts(fig)
+    p = ax.get_position()
+    vert, horiz = loc.split()
+    rows = -(-len(entries) // ncol)
+    if at is None:
+        cx = p.x0 * W + pad[0] if horiz == "left" else p.x1 * W - pad[0]
+        cy = p.y1 * Hf - pad[1] if vert == "upper" else p.y0 * Hf + pad[1]
+    else:
+        cx, cy = (p.x0 + at[0] * p.width) * W, (p.y0 + at[1] * p.height) * Hf
+    y = cy - ASC if vert == "upper" else cy + DESC + (rows - 1) * KEY_ROW
+    return key(fig, cx, entries, ncol=ncol, y=y, right=horiz == "right")
 
 
 def colour_key(fig, im, x, x1, title, ticks, row=0):
@@ -275,6 +342,30 @@ def colour_key(fig, im, x, x1, title, ticks, row=0):
     cbar.ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
     cbar.outline.set_linewidth(0.6)
     cax.tick_params(length=2.0, width=0.6, direction="out", pad=1.6, top=False, labelsize=TXT, color=INK)
+    return cax
+
+
+def inset_colour_key(ax, im, title, ticks, length=36.0, pad=(4.5, 5.0)):
+    """Horizontal colour scale in the upper right corner of a map, where the map is empty: the title left of the bar,
+    tick labels under it."""
+    fig = ax.figure
+    W, Hf = _pts(fig)
+    p = ax.get_position()
+    y = p.y1 * Hf - pad[1] - ASC                       # baseline of the title; the bar centred on its lower case
+    bx1 = p.x1 * W - pad[0] - 3.0                       # room for half the last tick label
+    bx0 = bx1 - length
+    t = fig.text(0, y / Hf, title, ha="left", va="baseline", fontsize=TXT)
+    fig.canvas.draw()
+    tw = t.get_window_extent(fig.canvas.get_renderer()).width / fig.dpi / PT
+    t.set_x((bx0 - 4.0 - tw) / W)
+    cax = fig.add_axes([bx0 / W, (y + MID - 2.3) / Hf, length / W, 4.6 / Hf])
+    cax.set_gid("key")
+    cbar = fig.colorbar(im, cax=cax, orientation="horizontal")
+    cbar.set_ticks(ticks)
+    cbar.ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+    cbar.outline.set_linewidth(0.6)
+    cax.tick_params(length=2.0, width=0.6, direction="out", pad=1.6, top=False, labelsize=TXT, color=INK)
+    fig.key_boxes.append((title, (bx0 - 4.0 - tw, y - 11.0, bx1 + 3.0, y + ASC)))
     return cax
 
 

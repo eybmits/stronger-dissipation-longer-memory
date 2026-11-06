@@ -3,10 +3,10 @@
 Recall curves are drawn smoothed over neighbouring delays (smooth, curve); every number in the text uses the
 unsmoothed recall.
 
-Every panel has the same size on the grid of style.py: Figures 2 and 3 span the page with four panels in a row,
-Figure 4 and the appendix figures span one text column; aligned spines, letters and axis labels, no titles, one set of
-sizes for lines and markers, and all text at the 10 pt of the captions. Keys and colour scales sit in a band under the panels, so that no
-text lies on the data.
+Figures 2 and 3 span the page with one row of four panels, as large as the page allows, with their keys and colour
+scale inside the panels, in space the data leave free; Figure 4 and the appendix figures span one text column on the
+panel grid of style.py, with their keys in a band under the panels. Aligned spines, letters and axis labels, no
+titles, one set of sizes for lines and markers, all text at the 10 pt of the captions, and no text on the data.
 """
 from __future__ import annotations
 
@@ -165,8 +165,9 @@ def decay_rates(ax):
 
 def fig2():
     """The shape sets the direction of the clock: recall at weak and at strong loss, memory against loss and the decay
-    rates, four equal panels in one row; under them the colour scale of a and b and the key of the shapes."""
-    fig = st.wide_figure(1, keys=2)
+    rates in one row. The two recall maps share their delay axis and carry the colour scale in an empty corner; the
+    memory panel is the widest and carries the key of the shapes above the limit set by the features."""
+    fig = st.wide_figure(1, hp=st.HP_ROW)
     a, b, c, d = (st.wide_place(fig, k) for k in range(4))
 
     # a, b: recall against loss rate and delay, local loss and one shared channel; dashed: delay below which half of
@@ -174,8 +175,7 @@ def fig2():
     im = recall_map(a, "separate")
     recall_map(b, "shared")
     b.set_ylabel("")
-    st.letter(a, "a", 0)
-    st.letter(b, "b", 1)
+    b.tick_params(axis="y", which="both", labelleft=False)
 
     # c: memory against loss for every shape, the four that carry the story in colour and the others in grey;
     # circles: gentle writing
@@ -198,26 +198,26 @@ def fig2():
         one = stack(SNAP["memory"]["separate"]["recall"])[:rows.shape[0], SNAP["memory"]["separate"]["gamma"].index(1.0)]
         st.band(c, gx, np.c_[rows, one], st.FAMILY["separate"], ls=SCALED, marker="o", ms=st.MS, alpha=0.12)
     c.axhline(45, color=st.INK3, lw=st.LW_GUIDE, ls=FEATURES)
+    # the limit named under its line, where the data leave room; the key of the shapes sits above it
+    c.annotate("45 features", xy=(0, 45), xycoords=("axes fraction", "data"), xytext=(4.5, -10.5),
+               textcoords="offset points", ha="left", va="baseline", color=st.INK3, fontsize=st.TXT)
     c.set_xscale("log")
     st.decades(c, "x", every=2)
     c.set_xlim(1 / 40, 400)
     c.set_xlabel(r"Loss rate $\gamma$")
-    c.set_ylim(0, 50)
+    c.set_ylim(0, 64)
     c.set_yticks([0, 15, 30, 45])
     c.set_ylabel(r"Memory $\sum_\tau C_\tau$")
-    st.letter(c, "c", 2)
 
     # d: decay rates, bright and dark modes of a shared channel and the slowest mode of local loss
     decay_rates(d)
-    st.letter(d, "d", 3)
 
+    st.fit_row(fig, (a, b, c, d), (70, 70, 152, 80), joined=(b,))
+    for ax, name in zip((a, b, c, d), "abcd"):
+        st.letter(ax, name)
     st.align(fig, rows=[(a, b, c, d)])
-    st.colour_key(fig, im, 0.0, st.grid_x0(0) + st.WP - 8, r"Recall $C_\tau$", [0, 0.5, 1])
-    main = [(st.line_handle(st.FAMILY[f], ls=st.DASH[f]), st.NAME[f]) for f in st.MAIN]
-    extra = [(st.line_handle(st.OTHER, lw=st.LW_THIN), "other shapes"),
-             (st.line_handle(st.INK3, ls=SCALED, marker="o"), "gentle writing"),
-             (st.line_handle(st.INK3, ls=FEATURES, lw=st.LW_GUIDE), "45 features")]
-    st.key(fig, st.grid_x0(3) + st.WP, main + extra, ncol=4, right=True)
+    st.inset_colour_key(a, im, r"$C_\tau$", [0, 0.5, 1])
+    st.inkey(c, [(st.line_handle(st.FAMILY[f], ls=st.DASH[f]), st.NAME[f]) for f in st.MAIN], "upper left", ncol=2)
     st.save(fig, HERE / "fig2_clock.pdf")
 
 
@@ -232,8 +232,9 @@ def qubit(k):
 
 def fig3():
     """The price of a long memory and how the input pays it: the collapse of the time to forget, the write along and
-    across the phases, the five-spin order against the mixing law and the qubit; each panel with its key underneath."""
-    fig = st.wide_figure(1, keys=2)
+    across the phases, the five-spin order against the mixing law and the qubit, in one row; the keys sit inside the
+    panels (the colours of a are those of c)."""
+    fig = st.wide_figure(1, hp=st.HP_ROW)
     a, b, c, d = (st.wide_place(fig, k) for k in range(4))
     dashed = (0, (3, 1.5))
 
@@ -261,7 +262,6 @@ def fig3():
     a.set_ylim(1e-3, 1e3)
     a.set_xlabel(r"$\gamma/\eta^2$ or $\gamma\eta^2$")
     a.set_ylabel(r"$\eta^2\,t_{\mathrm f}$")
-    st.letter(a, "a", 0)
 
     # b: write per input into the dark states of the equal-phase channel, for the input along the phases (uniform)
     # and across them (cosine pattern); dotted: 1/gamma
@@ -280,38 +280,40 @@ def fig3():
     b.set_ylim(1e-3, 1)
     b.set_xlabel(r"Loss rate $\gamma$")
     b.set_ylabel(r"Write per input")
-    st.letter(b, "b", 1)
 
-    # c: five spins, mean order against the mixing law
+    # c: five spins, mean order against the mixing law; room above the points for the key
     five_law(c)
-    st.letter(c, "c", 2)
+    c.set_ylim(0.8, 60)
 
     # d: one qubit in the limit of slow relaxation
     k = np.geomspace(0.01, 100, 400)
     size, single, order = qubit(k)
     d.plot(k, size / size.max(), color=st.GENTLE)
     d.plot(k, single, color=st.INK2, ls=dashed)
-    d.axvline(2 / np.sqrt(3), color=st.GENTLE, lw=st.LW_GUIDE, ls=(0, (1, 1.6)))
+    # the largest signal, up to the curve; the key sits above the curves
+    d.plot([2 / np.sqrt(3)] * 2, [0, 1], color=st.GENTLE, lw=st.LW_GUIDE, ls=(0, (1, 1.6)))
     d.set_xscale("log")
     st.decades(d, "x")
     d.set_xlim(0.02, 50)
-    d.set_ylim(0, 1.1)
+    d.set_ylim(0, 1.4)
     d.set_yticks([0, 0.5, 1])
     d.set_xlabel(r"$\theta^2/\epsilon$")
     d.set_ylabel(r"Signal, share")
-    st.letter(d, "d", 3)
 
+    st.fit_row(fig, (a, b, c, d), (80, 76, 118, 78))
+    for ax, name in zip((a, b, c, d), "abcd"):
+        st.letter(ax, name)
     st.align(fig, rows=[(a, b, c, d)])
-    st.key(fig, st.grid_x0(0) - st.G, [(st.marker_handle(st.FAMILY["separate"], mfc="white", mec=st.FAMILY["separate"],
-                                                         mew=0.8), "local"),
-                                       (st.marker_handle(st.FAMILY["signed"], mfc="white", mec=st.FAMILY["signed"],
-                                                         mew=0.8), "opposite phases")])
-    st.key(fig, st.grid_x0(1) - st.G, [(st.line_handle(st.FAMILY["shared"], marker="o"), "along"),
-                                       (st.line_handle(st.FAMILY["signed"], marker="o"), "across")])
-    st.key(fig, st.grid_x0(2) - st.G, [(st.marker_handle(st.INK3, mfc="white", mec=st.INK3, mew=0.9), "gentle writing"),
-                                       (st.line_handle(st.INK3, ls=(0, (4, 2)), lw=st.LW_GUIDE), "mixing law")])
-    st.key(fig, st.grid_x0(3) - st.G, [(st.line_handle(st.GENTLE), "signal"),
-                                       (st.line_handle(st.INK2, ls=dashed), "single inputs")])
+    st.inkey(b, [(st.line_handle(st.FAMILY["shared"], marker="o"), "along"),
+                 (st.line_handle(st.FAMILY["signed"], marker="o"), "across")], "lower left")
+    st.inkey(c, [(st.marker_handle(st.FAMILY["separate"], mfc=st.FAMILY["separate"], mec=st.FAMILY["separate"],
+                                   mew=0.9), "local"),
+                 (st.marker_handle(st.FAMILY["signed"], mfc=st.FAMILY["signed"], mec=st.FAMILY["signed"], mew=0.9),
+                  "opposite phases"),
+                 (st.marker_handle(st.INK3, mfc="white", mec=st.INK3, mew=0.9), "gentle writing"),
+                 (st.line_handle(st.INK3, ls=(0, (4, 2)), lw=st.LW_GUIDE), "mixing law")], "upper left")
+    st.inkey(d, [(st.line_handle(st.GENTLE), "signal"),
+                 (st.line_handle(st.INK2, ls=dashed), "single inputs")], "upper right")
     st.save(fig, HERE / "fig3_price.pdf")
 
 
