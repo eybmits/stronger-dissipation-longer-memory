@@ -14,7 +14,10 @@ physical observable X_1 and from stationary moments only:
 Model as in the Nov 2026 manuscript: H = sum_{i<j} J_ij X_i X_j + Z/2 + (3 + eta u) X / 4,
 one jump sqrt(gamma) (s1 - s2 - s3), steps of 1/2, binary inputs u = +-1.
 
-Run with:  python experiments/run_spin_orders.py [extra]
+prefactor   share of single past inputs and signal size against the prefactor c of the gentle-writing amplitude
+            eta = c / sqrt(gamma), at gamma = 4096
+
+Run with:  python experiments/run_spin_orders.py [extra | prefactor]
 """
 from __future__ import annotations
 
@@ -157,6 +160,33 @@ def case(task):
             "range": hi, "edges": edges.tolist(), "binned": binned}
 
 
+PREFACTORS = tuple(float(c) for c in np.geomspace(0.5, 64.0, 43))
+
+
+def prefactor_case(task):
+    seed, c = task
+    gamma = 4096.0
+    model = SpinModel(seed)
+    (Am, bm), (Ap, bp) = model.maps(gamma, c / np.sqrt(gamma))
+    A, D = (Ap + Am) / 2, (Ap - Am) / 2
+    mean = la.solve(np.eye(len(A)) - A, (bp + bm) / 2)
+    v = D @ mean + (bp - bm) / 2
+    stein = Stein(A)
+    sigma = solve_full(np.outer(v, v), A, D, stein)
+    a = model.x1
+    size = float(a @ sigma @ a)
+    G = stein.solve(np.outer(v, v))
+    return {"seed": seed, "gamma": gamma, "prefactor": c, "size": size, "single": float(a @ (A @ G @ A.T) @ a) / size}
+
+
+def prefactor_main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    tasks = [(s, c) for s in SEEDS for c in PREFACTORS]
+    with get_context("spawn").Pool(2) as pool, (OUT / "prefactor.jsonl").open("w") as fh:
+        for rec in pool.imap_unordered(prefactor_case, tasks):
+            fh.write(json.dumps(rec) + "\n")
+
+
 def main(extra=False):
     """The grid, or with ``extra`` two further loss rates for the strong input without order shares."""
     OUT.mkdir(parents=True, exist_ok=True)
@@ -182,4 +212,7 @@ def main(extra=False):
 
 if __name__ == "__main__":
     import sys
-    main(extra="extra" in sys.argv[1:])
+    if "prefactor" in sys.argv[1:]:
+        prefactor_main()
+    else:
+        main(extra="extra" in sys.argv[1:])

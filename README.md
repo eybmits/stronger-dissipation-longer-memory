@@ -1,4 +1,4 @@
-# Stronger dissipation, longer memory: engineering the jump operators of quantum reservoirs
+# How dissipation engineering shapes the memory of quantum reservoirs
 
 Manuscript source, code and data for version 2 of [arXiv:2608.14181](https://arxiv.org/abs/2608.14181).
 Version 1, *The Organization of Environmental Coupling Shapes What Quantum Reservoirs Remember*, is kept
@@ -9,18 +9,20 @@ unchanged in `paper/` and described further below.
 - Interval certificates of the three-spin limits: `paper_v2/certificates/spin_certificates.zip`
   (also attached to the PDF)
 
-All quantities are exact expectation values; every run uses eight fixed seeds.
+Sections 3.1 to 3.3 of the paper use exact expectation values, Sec. 3.4 adds finite sampling. Five-spin runs use
+eight fixed seeds unless the paper states fewer.
 
 ## Reproduce
 
 ```bash
 python -m pip install -r requirements.txt     # numpy, scipy, matplotlib; figures also need LaTeX
-python paper_v2/figures/make_figures.py       # Figs. 2-6 from paper_v2/data/snapshot.json
+python paper_v2/figures/make_figures.py       # Figs. 2-7 from paper_v2/data/snapshot.json
 cd paper_v2/figures && pdflatex fig1_concept.tex && cd ../..   # Fig. 1 (TikZ)
 cd paper_v2 && latexmk -pdf dissipation_qrc.tex && cd ..       # the paper
 ```
 
-To rebuild the snapshot from the raw records, unpack them at the repository root and export:
+To rebuild the snapshot from the raw records, unpack them at the repository root and export; this reproduces
+`snapshot.json` byte for byte:
 
 ```bash
 tar -xzf paper_v2/data/raw_results.tar.gz     # creates results/...
@@ -31,13 +33,15 @@ The raw records come from these scripts (each one documents its stages; they run
 
 | Script | Content |
 |---|---|
-| `experiments/run_dark_projection.py` | five-spin memory, spectra, dark-state model, erasure, writing, added local loss |
-| `experiments/run_jump_families.py` | exchange, gain/loss and dephasing families; protected operators |
-| `experiments/run_review_runs.py` | scaled input, slow modes up to large loss, local dephasing, signal size |
+| `experiments/run_dark_projection.py` | five-spin memory, spectra, decay rates, dark-state model, erasure, write along and across the phases, added local loss |
+| `experiments/run_jump_families.py` | exchange, gain/loss and dephasing; protected operators |
+| `experiments/run_review_runs.py` | gentle writing, slow modes up to large loss, local dephasing, signal size |
+| `experiments/run_clock.py` | time to forget at four input amplitudes, finite sampling and budgets, write onto the slow modes, input on one spin |
+| `experiments/run_five_spin_orders.py` | exact order distribution of the five-spin capacity against the mixing law |
 | `experiments/run_leak_size.py` | leak coefficient of a shared channel at three to six spins |
-| `experiments/run_spin_orders.py` | three-spin order shares at fixed and scaled amplitude |
+| `experiments/run_spin_orders.py` | three-spin order shares at a fixed amplitude and with gentle writing; prefactor scan |
 | `experiments/theory/order_law/reconstruct.py` | exact check of the mixing law (Fig. 5) |
-| `experiments/run_measurement_full.py` | finite sampling of the first version (Fig. 6) |
+| `experiments/referee_checks/` | training-set, prefactor and principal-direction checks |
 
 The interval programs, the independent finite-rate check and the coherence test of Appendix C are inside the
 certificate archive; its `README.txt` explains how to run them.

@@ -1,16 +1,11 @@
 \begin{abstract}
-Dissipation is usually treated as the clock of a quantum reservoir computer: the more the reservoir leaks into its
-environment, the faster it forgets. We show that this depends on how it leaks. In the spin reservoirs we study, the
-same total coupling to the environment has opposite effects. If each qubit leaks on its own, stronger leaking
-erases memory faster. If the qubits leak through one shared channel, stronger leaking makes memory last longer. The
-reason is interference: the decay paths of the qubits cancel for some states, which cannot leak at all, and strong
-leaking holds the reservoir inside them. A long memory is a trap of its own, because every new input nudges what
-is stored and old inputs blend with the ones that follow. We prove that in slowly forgetting reservoirs, on average,
-the number of inputs blended together is how hard one input nudges the stored state times how long the memory
-lasts. Writing each input more gently as the
-memory grows, half as strongly for a memory four times longer, keeps single past inputs readable over a range of
-delays that grows with the leaking: we prove this in a three-spin reservoir, where coherence between dark states
-carries the memory.
-The memory becomes longer but thinner. How a quantum system leaks decides not only how fast it forgets, but what it
-keeps and in what form.
+Quantum reservoir computers process time series through the fading memory of a dissipative quantum system. We show
+that the shape of the dissipation, set by its jump operators, matters as much as its rate. At equal total coupling,
+spins that decay independently forget faster as the loss grows, whereas spins sharing one decay channel forget more
+slowly: strong loss holds them in dark states through the quantum Zeno effect. A long memory has a price, because
+later inputs scramble earlier ones into products that a linear readout cannot use. For a class of reservoirs we prove
+that the number of inputs mixed into a stored memory is exponentially distributed, with mean equal to how hard one
+input nudges it times how long it lasts. The input must therefore weaken as the memory grows, which more than doubles
+the linear memory under exact readout. With finite sampling, weak local loss, which cools the spins, retains the most
+memory; dark-state memories last as long but are over ten times fainter.
 \end{abstract}

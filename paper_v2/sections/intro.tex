@@ -1,67 +1,70 @@
 \section{Introduction}
 \label{sec:introduction}
-A reservoir computer processes a stream of inputs with a fixed dynamical system and trains only a linear
-readout~\cite{Maass2002,JaegerESP2001}. In quantum reservoir computing (QRC) the system is
-quantum~\cite{Fujii2017}, and how it keeps and loses information about past inputs decides what it can compute:
-recent inputs must stay available, while older inputs and the initial state must fade. Unitary dynamics does not
-forget, so dissipation is part of the design~\cite{ChenNurdin2019}. Damping, absorption, measurement and resets
-all create or regulate this fading
-memory~\cite{Chen2020,Sannia2024,Ricci2026,Goetting2025,Mujal2023,Franceschetto2026,KobayashiFeedback2024,
-Cindrak2024,Sannia2026Memory,Paparelle2026}. Tuning the rate of independent qubit relaxation improves a driven spin
-reservoir~\cite{Sannia2024}, and related work tunes the strengths of the drive, the interactions and the
-damping~\cite{MartinezPenaPRL2021,Baumann2026}. In these studies the environment acts as a clock: the more the
-reservoir leaks, the faster it forgets.
-
-An environment specifies more than a rate. Its jump operators decide how the reservoir leaks: each qubit into its
-own channel, all qubits through one shared channel, pairs together, or while excitations hop from qubit to qubit.
-Choosing them is the craft of dissipation engineering, which prepares and protects quantum states and even computes
-with them~\cite{Poyatos1996,Verstraete2009,Pastawski2011,Harrington2022}. A shared channel makes the decay paths of
-the qubits interfere: some collective states decay faster, while others are dark and cannot decay at all, as in
-subradiance~\cite{Dicke1954,AsenjoGarcia2017,Facchinetti2016}. Earlier QRC studies tuned the rates of local
-channels~\cite{Sannia2024}, compared local noise types in gate-based reservoirs~\cite{Kubota2023,Fry2023}, found
-that stronger photon loss favours redundant encoding in coupled Kerr oscillators~\cite{Cheamsawat2025}, or read a
-static classifier out of a decoherence-free subspace~\cite{Akshay2026}. How the way a reservoir leaks shapes its
-memory of a time series has not been compared as the loss strength is varied at equal coupling to the
-environment.
-
-Here we show that it decides the outcome. At the same total coupling, separate channels make stronger leaking erase
-memory faster, while one shared channel makes stronger leaking preserve it longer (Fig.~\ref{fig:concept}). The
-reason is interference. The shared channel cannot reach its dark states, and strong leaking acts like constant
-checking that holds the reservoir inside them, the quantum Zeno
-effect~\cite{FacchiPascazio2002,Zanardi2014,Burgarth2019}; what still escapes falls as $1/\gamma$. A model of the
-dark states alone, with nothing fitted, reproduces the memory of the full reservoir, and erasing them destroys it.
-
-Lasting longer is not the same as staying readable. Every new input nudges the stored state, so a long-lived
-record is blended with everything that came after it (Fig.~\ref{fig:concept}d). We prove a simple law: on average, the
-number of inputs blended together, the order of the memory, is the mixing fraction of one input, how hard it nudges the
-stored state, times the memory time. The fix follows from the law. Write more gently as the memory grows, with an
-input amplitude that falls as one over the square root of the memory time, and let the input reach the dark states
-directly.
-Single past inputs then stay readable over a range of delays, the number of past steps that hold 90\% of the
-recall, that grows in proportion to the loss rate; in a three-spin reservoir we prove this and show that coherence
-between dark states carries the memory. The price is that the memory becomes longer but thinner: each delay is
-recalled more faintly, the total cannot exceed what the readout holds, and ordinary local noise limits how far the
-gain goes.
-
-Memory here means what a trained linear readout recovers from exact expectation values. The mixing law holds for
-a class of reservoirs; the spin results hold for the reservoirs we study, with specified Hamiltonians and jump
-operators. The first version of this study~\cite{BaumannV1} compared the same jump families on four benchmark
-tasks (Appendix~\ref{app:v1}) and local with collective relaxation from four to eight spins; the dark-state
-mechanism, the mixing law, the writing rule and the proofs are new here.
-
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig1_concept.pdf}
-\caption{\textbf{Engineering the jump operators of a quantum reservoir.}
-\textbf{a}~Inputs drive interacting spins coupled to an environment; a linear readout recalls past inputs.
-\textbf{b}~Jump families at equal total coupling $\Tr\sum_kL_k^\dagger L_k$, with the number of operators each leaves
-untouched (protected) at five spins.
-\textbf{c}~Two spins sharing one channel. The decay amplitudes of $|10\rangle$ and $|01\rangle$ add for
-$|{+}\rangle$, which decays, and cancel for $|{-}\rangle$, which is dark. The Hamiltonian $H$ mixes the two; strong
-loss turns this into a slow leak, so the dark state survives longer the stronger the loss (inset: coupling $g$
-between $|{+}\rangle$ and $|{-}\rangle$, $\gamma/g=2$, 8, 32).
-\textbf{d}~Each input turns the stored state by $\pm\theta$, so over the memory time its direction spreads by about
-$\theta\sqrt{t_{\mathrm{mem}}}$. Small turns keep the spread small and the readout sees each input on its own; large
-turns let it wrap around and the readout sees only products of inputs.}
+\caption{\textbf{Engineering how a quantum reservoir leaks.}
+\textbf{a}~Inputs drive interacting spins coupled to an environment; a linear readout recalls past inputs from the
+spins' expectation values.
+\textbf{b}~Four shapes of the environment at equal total coupling, with the baths that take what the spins lose;
+$c_i=\pm1$, darker spin: reversed phase.
+\textbf{c}~Interference makes dark states: for two spins sharing one channel, the decay amplitudes of $|10\rangle$
+and $|01\rangle$ add for $|{+}\rangle$ and cancel for $|{-}\rangle$. The Hamiltonian couples the two, and strong loss
+turns this into a slow leak (inset: population of $|{-}\rangle$ at $\gamma=2$, 8 and 32, in units of their
+coupling).
+\textbf{d}~Two ways to forget: a stored input leaks away, and later inputs, each turning the stored state by
+$\pm\theta$, spread its direction by about $\theta\sqrt{t_{\mathrm{mem}}}$. Small turns keep each input readable on
+its own; large turns leave only products of inputs.}
 \label{fig:concept}
 \end{figure*}
+
+Throw pebbles into a pond, and the ripples hold a fading record of the last few throws. Reservoir computing turns this
+into a machine~\cite{Maass2002,JaegerESP2001}: a fixed dynamical system, the reservoir, is driven by a stream of
+inputs, and only a linear readout of its state is trained, to recall past inputs or to predict what comes next; even
+a bucket of water has served as a reservoir~\cite{Fernando2003}. A good reservoir holds on to recent inputs and lets
+go of old ones and of its own starting state. In quantum reservoir computing (QRC) the system is
+quantum~\cite{Fujii2017}, here a few interacting spins whose expectation values are read out. Unitary dynamics never
+forgets, so the letting go must come from the environment~\cite{ChenNurdin2019}: damping, absorption, measurement and
+resets all create or regulate fading
+memory~\cite{Chen2020,Sannia2024,Ricci2026,Goetting2025,Mujal2023,Franceschetto2026,KobayashiFeedback2024,
+Cindrak2024,Sannia2026Memory,Paparelle2026}.
+
+The usual knob is the loss rate. Tuning how fast each qubit relaxes improves a driven spin
+reservoir~\cite{Sannia2024}, memory peaks at an intermediate decay that coincides with maximal optical
+absorption~\cite{Goetting2025}, and drive, interactions and damping have been tuned
+together~\cite{MartinezPenaPRL2021}, also by us~\cite{Baumann2026}. In this picture dissipation is a dial with a sweet
+spot: the more the reservoir leaks, the faster it forgets.
+
+But dissipation can be designed, not just dialled. The jump operators decide how a reservoir leaks: each spin into
+its own channel, or all spins through one shared channel, in which the decay paths interfere and some collective
+states, the dark states, cannot decay at all, as in subradiance~\cite{Dicke1954,AsenjoGarcia2017,Facchinetti2016}.
+Choosing jump operators is the craft of dissipation engineering, which prepares and protects quantum states and even
+computes with them~\cite{Poyatos1996,Verstraete2009,Pastawski2011,Harrington2022}. Earlier QRC studies tuned the
+rates of local channels~\cite{Sannia2024}, compared local noise types in gate-based reservoirs~\cite{Kubota2023,Fry2023},
+found that stronger photon loss favours redundant encoding in coupled Kerr oscillators~\cite{Cheamsawat2025}, or read
+a static classifier out of a decoherence-free subspace~\cite{Akshay2026}. Here we ask how the shape of the
+dissipation, not only its strength, sets the memory of a quantum reservoir.
+
+We find three things, which become three design rules (Fig.~\ref{fig:concept}). First, the jump operators set the
+direction of the memory clock: at the same total coupling, spins that leak on their own forget faster as the loss
+grows, while spins that share one channel forget more slowly, because strong loss holds the reservoir in its dark
+states through the quantum Zeno effect~\cite{FacchiPascazio2002,Zanardi2014,Burgarth2019}. Second, the input must
+follow this clock. Later inputs scramble a stored input (in the everyday sense, not many-body information scrambling)
+into products that a linear readout cannot use. For reservoirs in which a stored signal fades along a single slow
+direction, we prove that the number of inputs mixed into a memory is exponentially distributed, with mean equal to
+how hard one input nudges it times how long it lasts. An input that gets gentler as the memory grows therefore more
+than doubles the linear memory with exact readout; the phases of a shared channel decide whether a uniform input
+writes gently on its own. Third, the shape decides how large, and hence how measurable, a memory is. Dissipation that
+cools the spins leaves a state the input can tilt; once measurements are counted, weak local loss keeps about twice
+the memory of the dark states, which last as long but are more than ten times fainter.
+
+Some ingredients are known: short-term memory and its bounds in echo-state and linear
+networks~\cite{JaegerESP2001,White2004,Ganguli2008}, the trade of memory against nonlinearity through the input
+scaling~\cite{Dambre2012,Inubushi2017}, recently across quantum reservoir protocols~\cite{Cindrak2026}, and the slow
+leak out of Zeno-protected states~\cite{Zanardi2014,Reiter2012}; weakening the input as the memory grows is the quantum
+counterpart of shrinking the input scaling near the edge of stability in leaky-integrator echo-state
+networks~\cite{Jaeger2007Leaky}. New is what the jump operators do to memory, through their interference, their
+phases and the state they leave behind, and the law for how many inputs a memory mixes, which ties the input to the
+clock. The law is proved for a class of reservoirs (Appendix~\ref{app:law}), the three-spin limits are certified by
+interval arithmetic (Appendix~\ref{app:spins}), and the five-spin results are numerical.
+

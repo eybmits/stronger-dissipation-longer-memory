@@ -1,351 +1,505 @@
 \section{The mixing law}
 \label{app:law}
-\subsection{Precise statement}
-On $n$ traceless coordinates let the step be $r_t=(1-p)O(u_t)r_{t-1}+pb$, where independent, identically
-distributed inputs select orthogonal maps $O(u)$ and $b$ represents the reset state. Assume that the mean map
-$A=\mathbb EO$ has spectral radius below one, that the only symmetric matrices fixed by
-$X\mapsto\mathbb E[OXO^{\mathsf T}]$ are multiples of the identity, and that the input writes a signal,
-$\mathbb E\|(O-A)(1-A)^{-1}b\|^2>0$. For a fixed linear readout of positive rank, draw the order $D_p$ with
-probability equal to its share of the ideal memory. Then $pD_p\to\mathrm{Exp}(2/s)$ in distribution with
-$s=1-\|A\|_F^2/n$, and $\mathbb ED_p=s/(2p)+O(1)$.
+This appendix proves the mixing law of Sec.~\ref{sec:mixing}: in a reservoir that forgets slowly, a stored function
+involves on average as many inputs as the mixing fraction of one input times the memory time. The last part extends
+the law to physical channels without a reset, which Appendix~\ref{app:spins} needs.
 
-\emph{Idea.} One input writes a variance of order $p^2$. A covariance shape that survives for $1/(2p)$ steps
-collects it to order $p$. We identify that shape and then count, with the recursion of
-Eq.~\eqref{eq:recursion}, how many inputs it contains.
-
-\subsection{Generating function}
-\label{app:gen}
-The order transfer $\mathcal F=(1-\mathcal B)^{-1}\mathcal K$ is a positive map on covariance matrices, and
-$(1-\mathcal F)^{-1}=(1-\mathcal T)^{-1}(1-\mathcal B)=1+(1-\mathcal T)^{-1}\mathcal K$ is positive, so its spectral
-radius is below one. Summing Eq.~\eqref{eq:recursion},
+\subsection{Setting and statement}
+We describe the reservoir by the $n$ traceless coordinates $r$ of its state in an orthonormal basis of operators, the
+Bloch vector for a qubit. A unitary acts on $r$ as a rotation. In each step the reservoir is reset to a fixed state
+with a small probability $p$ and is otherwise rotated by $O(u)$:
 \begin{equation}
-\begin{aligned}
-  \sum_{k\ge1}z^kG_k&=z(1-z\mathcal F)^{-1}G_1,\\
-  \sum_{k\ge1}kG_k&=(1-\mathcal F)^{-1}\Sigma ,
-\end{aligned}
-  \label{eq:generating}
+  r_t=(1-p)\,O(u_t)\,r_{t-1}+p\,b .
+  \label{eq:reset}
 \end{equation}
-and $\mathcal F^K\Sigma$ is the covariance above order $K$.
-
-\subsection{The surviving covariance}
-\label{app:cov}
-Let $r=1-p$, $A=\mathbb EO$, $\mathcal B_0X=AXA^{\mathsf T}$ and $\mathcal T_0X=\mathbb E[OXO^{\mathsf T}]$. Every step
-contracts differences by $r$, so there is a unique stationary state. Its mean is $m_p=p(1-rA)^{-1}b=p\mu+O(p^2)$
-with $\mu=(1-A)^{-1}b$, and the innovation $\xi_p=r(O-A)m_p$ has covariance $V_p=p^2V_0+O(p^3)$ with
-$v=\Tr V_0=\|\mu\|^2-\|A\mu\|^2>0$ by the writing assumption. On symmetric matrices $\mathcal T_0$ preserves the trace
-and the identity and contracts the Frobenius norm; by assumption the identity is its only fixed point, and power
-boundedness excludes a Jordan block. Its spectral projector is $X\mapsto1\,\Tr X/n$, and all other directions have
-a bounded resolvent near one. Hence
+Here $b$ represents the reset state, and the inputs $u_t$ are independent and identically distributed. A stored
+signal loses a fraction $2p$ of its variance per step, so it lasts about $t_{\mathrm{mem}}=1/(2p)$ steps. Three
+conditions make the law hold:
+\begin{enumerate}[label=(\arabic*),leftmargin=*,itemsep=2pt,topsep=4pt]
+\item \emph{The average step forgets.} The average rotation $A=\mathbb EO$ shrinks every vector: its spectral radius
+  is below one.
+\item \emph{The inputs scramble.} The only covariance matrices that the random rotations leave unchanged on average,
+  $\mathbb E[OXO^{\mathsf T}]=X$, are multiples of the identity.
+\item \emph{The input writes.} One input changes the state: $\mathbb E\|(O-A)\mu\|^2>0$ with $\mu=(1-A)^{-1}b$.
+\end{enumerate}
+The first condition means that only products of inputs can be stored for long, the second that a stored signal
+spreads evenly over all directions, and the third that there is something to store. The mixing fraction
 \begin{equation}
-  \Sigma_p=(1-r^2\mathcal T_0)^{-1}V_p=\frac{pv}{2n}\,1+O(p^2).
+  s=1-\frac{\|A\|_F^2}{n}
+  \label{eq:mixing}
+\end{equation}
+says how hard one input nudges the stored state. For a unit vector $x$ of random orientation,
+$\mathbb E\|(O-A)x\|^2=s$: one input turns a fraction $s$ of a stored signal away from the average rotation. The
+fraction lies between 0 and 1, and the first condition makes it positive. If the inputs $u=\pm1$ rotate by
+$O=e^{u\theta G}$ with a fixed generator $G$, whose eigenvalues are $i\lambda_1,\dots,i\lambda_n$, the average
+rotation is $\cosh\theta G$ and $s=\frac1n\sum_j\sin^2\theta\lambda_j$, which grows as $\theta^2$ for small
+turns.
+
+\begin{keybox}
+\textbf{Mixing law, precise form.} Assume conditions (1)--(3) and take any fixed linear readout. Pick a stored function
+with probability equal to its share of the readout's capacity, and let $D$ be its order. As $p\to0$, the ratio
+$D/t_{\mathrm{mem}}$ becomes exponentially distributed with mean $s$, and
+\[\mathbb ED=s\,t_{\mathrm{mem}}+O(1).\]
+Equivalently, products of more than $x\,t_{\mathrm{mem}}$ inputs carry the share $e^{-x/s}$ of the capacity.
+\end{keybox}
+
+\subsection{The idea: a race}
+A stored signal is spread evenly over all directions. In each step the current input turns a fraction $s$ of it away
+from the average rotation, which adds one input to that part, and the reset removes a fraction $1/t_{\mathrm{mem}}$.
+On average $1/s$ steps pass before the next input joins a product, and meanwhile it loses a fraction
+$1/(s\,t_{\mathrm{mem}})$ of its weight, so products of more than $K$ inputs carry about
+\begin{equation*}
+  \Bigl(1-\frac{1}{s\,t_{\mathrm{mem}}}\Bigr)^{K}\approx e^{-K/(s\,t_{\mathrm{mem}})} ,
+\end{equation*}
+an exponential law with mean $s\,t_{\mathrm{mem}}$. The proof makes this bookkeeping exact.
+
+\subsection{Proof}
+\label{app:proof}
+The proof works with covariance matrices. Methods splits the stationary covariance $\Sigma$ of the state into the
+parts $G_k$ carried by products of $k$ inputs and gives their recursion, Eq.~\eqref{eq:recursion}: the mean step
+$\mathcal B$ carries a stored product along, and the fluctuating part $\mathcal K$ of the step adds one input to it.
+In the reset model the mean step is $\mathcal BX=(1-p)^2AXA^{\mathsf T}$, the full step
+$\mathcal TX=(1-p)^2\,\mathbb E[OXO^{\mathsf T}]$, and $\mathcal K=\mathcal T-\mathcal B$. We write $\mathcal B_0$,
+$\mathcal T_0$ and $\mathcal K_0$ for the same maps at $p=0$.
+
+\paragraph{Step 1: the stored signal is small and spread evenly.}
+The stationary mean is $m=p\,[1-(1-p)A]^{-1}b=p\mu+O(p^2)$, so one input writes the change $(1-p)(O-A)m$, of size
+$p$. Its covariance $V$ has the trace $p^2v+O(p^3)$ with $v=\mathbb E\|(O-A)\mu\|^2$, which is positive by
+condition (3). The random rotations preserve the trace of a covariance and, by condition (2), leave only the identity
+unchanged; since they cannot enlarge a covariance, the identity is a simple fixed point with the projector
+$X\mapsto(\Tr X/n)\,1$. On every other direction $(1-\mathcal T)^{-1}$ stays bounded as $p\to0$, while on the identity
+it equals $1/[1-(1-p)^2]\approx1/(2p)$. The written covariance therefore piles up along the identity:
+\begin{equation}
+  \Sigma=(1-\mathcal T)^{-1}V=\frac{pv}{2n}\,1+O(p^2).
   \label{eq:slowcov}
 \end{equation}
-The mean map is mixing, so $(1-r^2\mathcal B_0)^{-1}$ stays bounded and every fixed order has $G_k=O(p^2)$. Since
-$\Sigma_y^+=O(p^{-1})$ on its support, any fixed set of orders carries a share $O(p)$, while the shares add up to the
-rank $q$ of the readout.
 
-\subsection{The number of inputs}
-\label{app:inputs}
-At $p=0$ the transfer $\mathcal F_0=(1-\mathcal B_0)^{-1}(\mathcal T_0-\mathcal B_0)$ fixes the identity; it is
-positive and power bounded, and its unit eigenvalue is simple. Its left eigenfunctional is
+\paragraph{Step 2: few inputs carry almost nothing.}
+The mean step forgets by condition (1), so $(1-\mathcal B)^{-1}$ stays bounded as $p\to0$. The recursion then makes
+$G_1=(1-\mathcal B)^{-1}V$ of order $p^2$, and the same holds for every $G_k$ with fixed $k$. Measured against
+$\Sigma$, which is of order $p$ and has full rank, any fixed set of orders carries a share of order $p$ of the
+capacity of any readout, although the shares of all orders add up to its rank. A long memory consists of products of many
+inputs.
+
+\paragraph{Step 3: counting the inputs.}
+Call $\mathcal F=(1-\mathcal B)^{-1}\mathcal K$ the order transfer, so that $G_{k+1}=\mathcal FG_k$. At $p=0$ it
+leaves the identity unchanged, because $\mathcal K_01=1-AA^{\mathsf T}=(1-\mathcal B_0)1$. Its matching left
+eigenvector is the weight
 \begin{equation}
-  \ell(X)=\Tr[(1-A^{\mathsf T}A)X],\quad \ell(1)=ns>0,
+  \ell(X)=\Tr[(1-A^{\mathsf T}A)X],\qquad \ell(1)=ns ,
+  \label{eq:weight}
 \end{equation}
-because $\ell=\Tr\circ(1-\mathcal B_0)$ and $\Tr\circ\mathcal T_0=\Tr$. Differentiating
-$(1-r^2\mathcal B_0)\mathcal F_p=r^2(\mathcal T_0-\mathcal B_0)$ at $p=0$ gives $(1-\mathcal B_0)\mathcal F_0'1=-2\cdot1$,
-so the leading eigenvalue is $1-\beta p+O(p^2)$ with $\beta=2n/\ell(1)=2/s$. Insert $z=e^{-\lambda p}$ into
-Eq.~\eqref{eq:generating}: for fixed $\lambda\ge0$ only this eigenvalue gives a divergent resolvent term, and with
-$\ell(G_1)=p^2v+O(p^3)$,
+since $\ell(\mathcal F_0X)=\Tr\mathcal K_0X=\ell(X)$ when the rotations preserve the trace. For small $p$ the
+eigenvalue one moves to
 \begin{equation}
-  \sum_{k\ge1}e^{-\lambda pk}G_k=\frac{pv}{\ell(1)(\lambda+\beta)}\,1+O(p^2).
+  1-\frac{2}{s}\,p+O(p^2):
+  \label{eq:ordereig}
 \end{equation}
-Divided by Eq.~\eqref{eq:slowcov} this is the Laplace transform $\beta/(\lambda+\beta)$ of the exponential law.
-The second identity in Eq.~\eqref{eq:generating} gives the order-weighted covariance $\Sigma_p/(\beta p)+O(p)$, hence
-$\mathbb ED_p=1/(\beta p)+O(1)=s\,t_{\mathrm{mem}}+O(1)$.
+each step up in order costs a fraction $2p/s=1/(s\,t_{\mathrm{mem}})$ of the weight, as in the race. To see this,
+differentiate $(1-\mathcal B)\mathcal F=\mathcal K$ at $p=0$ and apply it to the identity, which gives
+$(1-\mathcal B_0)\mathcal F_0'1=-2\cdot1$. Its trace is the weight $\ell(\mathcal F_0'1)=-2n$, and dividing by
+$\ell(1)=ns$ gives the rate $2/s$.
 
-\subsection{The mixing fraction}
-For a unit vector $x$ drawn uniformly, $\mathbb E\|(O-A)x\|^2=\Tr\mathcal K_0(1)/n=s$: one input moves a fraction $s$ of
-a stored signal away from the average turn, and this fraction is passed to the next order. For
-$O=e^{u\theta G}$ with $u=\pm1$ and skew-symmetric $G$ with eigenvalues $i\lambda_j$, the mean map is $\cosh\theta G$
-and $s=n^{-1}\sum_j\sin^2\theta\lambda_j$, which grows as $\theta^2$.
+To turn the eigenvalue into a distribution, weigh order $k$ with $e^{-\lambda pk}$. Summing the recursion gives
+$\sum_kz^kG_k=z(1-z\mathcal F)^{-1}G_1$, and as $z=e^{-\lambda p}$ approaches one, only the eigenvalue of
+Eq.~\eqref{eq:ordereig} makes the inverse large. With $\ell(G_1)=p^2v+O(p^3)$ and $\beta=2/s$,
+\begin{equation}
+  \sum_{k\ge1}e^{-\lambda pk}G_k=\frac{pv}{2n}\,\frac{\beta}{\lambda+\beta}\,1+O(p^2).
+  \label{eq:laplace}
+\end{equation}
+Divided by Eq.~\eqref{eq:slowcov}, this is $\beta/(\lambda+\beta)$, the Laplace transform of an exponential
+distribution of $pD$ with rate $\beta$. So $D/t_{\mathrm{mem}}=2pD$ is exponential with mean $s$. Because both
+covariances are multiples of the identity to leading order, the same holds for the share of the capacity of any
+readout. Finally, $\sum_kkG_k=(1-\mathcal F)^{-1}\Sigma=\Sigma/(\beta p)+O(p)$ gives
+$\mathbb ED=s\,t_{\mathrm{mem}}+O(1)$.
 
-\subsection{Two sectors, two laws}
-The assumption of a single fixed covariance matters. Let a classical flag select one of two qubit rotations about
-$Z$, by $\pm\pi/6$ or $\pm\pi/3$, and let the reset state be block diagonal. Each sector obeys the law separately,
-and a single $Y$ readout sees the mixture $\Pr(pD_p>x)\to\frac12e^{-8x}+\frac12e^{-8x/3}$.
+\paragraph{Two technical points.}
+The eigenvalue one of $\mathcal F_0$ is simple: a fixed point of $\mathcal F_0$ satisfies $\mathcal T_0X=X$ and is
+therefore a multiple of the identity, and $\ell(1)>0$ rules out a Jordan chain. For $p>0$ every eigenvalue of
+$\mathcal F$ lies inside the unit circle, by a Perron--Frobenius argument: $\mathcal F$ maps positive matrices to
+positive matrices, and so does $(1-\mathcal F)^{-1}=1+(1-\mathcal T)^{-1}\mathcal K$. The eigenvalues of
+$\mathcal F_0$ therefore lie in the closed unit disk, only the simple one equals one, and only the eigenvalue of
+Eq.~\eqref{eq:ordereig} makes the sum diverge.
 
-\subsection{Physical channels}
+\subsection{When the law needs one slow direction}
+Condition (2) matters. Let a classical flag, set by the reset state and never changed, select one of two qubit
+rotations about $Z$, by $\pm\pi/6$ or by $\pm\pi/3$, and let the reset state put the flag in either value with
+probability $\tfrac12$ and the qubit along $+X$ in both. Each sector obeys the law with its own mixing fraction,
+$1/4$ and $3/4$, and a single $Y$ readout sees their mixture, weighted by the variance each sector stores. The
+gentler sector stores more, so as $p\to0$ products of more than $x\,t_{\mathrm{mem}}$ inputs carry the share
+$w\,e^{-4x}+(1-w)\,e^{-4x/3}$ with $w=0.82$, which exact moments reproduce. One observable then shows two order
+scales.
+
+\subsection{Physical channels without a reset}
 \label{app:physical}
-A physical channel does not reset to a prescribed state, but the argument above only needs a single slow
-covariance direction. We state the general version that Appendix~\ref{app:spins} uses and prove it along the same
-four steps.
+A physical channel does not reset to a prescribed state, but the proof used the reset only through three facts: one
+covariance direction is slow, it leaks at a small rate, and the mean step forgets everything else. The same three
+steps therefore prove the law for general channels. Appendix~\ref{app:spins} uses this version; readers interested in
+the reset model can skip it.
 
-\emph{Setting.} Work on invariant reachable coordinates and translate a common limiting fixed point to zero; for the
-spin reservoir of Appendix~\ref{app:spins} these are the dark coordinates, which the bright part follows at order
-$\epsilon$ [Eq.~\eqref{eq:slowstep}]. The step
-is $r_t=A_{u_t}(\epsilon)r_{t-1}+b_{u_t}(\epsilon)$ with a small leakage $\epsilon$, and we write $\bar A_\epsilon=\mathbb E A_u(\epsilon)$,
-$\mathcal B_\epsilon X=\bar A_\epsilon X\bar A_\epsilon^{\mathsf T}$, $\mathcal T_\epsilon X=\mathbb E[A_uXA_u^{\mathsf T}]$ and
-$\mathcal K_\epsilon=\mathcal T_\epsilon-\mathcal B_\epsilon$. Assume:
-(i) $A_u(\epsilon)=A_{u,0}+\epsilon A_{u,1}+O(\epsilon^2)$ and $b_u(\epsilon)=\epsilon b_{u,1}+O(\epsilon^2)$ in mean square;
-(ii) the mean step is mixing at $\epsilon=0$, that is, $\bar A_0$ has spectral radius below one;
-(iii) the channel is mean-square stable for small $\epsilon>0$;
-(iv) $\mathcal T_\epsilon$ has a simple eigenvalue $1-\kappa\epsilon+O(\epsilon^2)$ with $\kappa>0$, all its other eigenvalues stay
-a fixed distance away from one, and at $\epsilon=0$ the eigenvalue has right eigenmatrix $R\succeq0$ and a left
-eigenfunctional $\ell$ of $\mathcal T_0$ that is nonnegative on positive matrices, with $\ell(R)=1$;
-(v) the input writes along it, $\ell(V_*)>0$, where $V_*$ is defined in step 1.
+\emph{Setting.} One step is $r_t=A_u(\epsilon)r_{t-1}+b_u(\epsilon)$ on the coordinates that the inputs can reach,
+with a small leak $\epsilon$, and $\mathcal B$, $\mathcal T$ and $\mathcal K$ are formed from $A_u$ as before. We
+assume:
+\begin{enumerate}[label=(\roman*),leftmargin=*,itemsep=2pt,topsep=4pt]
+\item $A_u$ and $b_u$ depend smoothly on $\epsilon$ in mean square, and $b_u$ vanishes at $\epsilon=0$;
+\item the mean step forgets at $\epsilon=0$: $\mathbb EA_u(0)$ has spectral radius below one;
+\item the channel is mean-square stable for small $\epsilon>0$;
+\item one covariance direction is slow: $\mathcal T$ has a simple eigenvalue $1-\kappa\epsilon+O(\epsilon^2)$ with
+  $\kappa>0$ and no other eigenvalue near one; at $\epsilon=0$ its right eigenvector is a positive matrix $Q$, and its
+  left eigenvector is a weight $\ell$ that is nonnegative on positive matrices, with $\ell(Q)=1$;
+\item the input writes along it: the change written by one input, of order $\epsilon$, has covariance
+  $\epsilon^2V_*+O(\epsilon^3)$ with $\ell(V_*)>0$.
+\end{enumerate}
+The reset model is the case $\epsilon=p$, $\kappa=2$, $Q=1$ and $\ell=\Tr/n$. Condition (iv) concerns the
+covariance that the random steps carry, not the number of slow modes: at a fixed amplitude the inputs turn the 99
+slow dark modes of a shared channel with opposite phases differently in each step and spread a stored signal over
+all of them, so that one covariance direction stays slow. With several slow directions, each mixes at its own rate,
+as in the example above.
 
-\emph{Step 1: the innovation.} The stationary mean solves $m=\bar A_\epsilon m+\mathbb Eb_u(\epsilon)$. By (ii) it is
-$m_\epsilon=\epsilon m_1+O(\epsilon^2)$ with $m_1=(1-\bar A_0)^{-1}\mathbb Eb_{u,1}$. The innovation is therefore
-$\xi_u=\epsilon z_u+O(\epsilon^2)$ with $z_u=A_{u,0}m_1+b_{u,1}-m_1$, and its covariance is $V_\epsilon=\epsilon^2V_*+O(\epsilon^3)$ with
-$V_*=\mathbb E[z_uz_u^{\mathsf T}]$; this is the order-$p^2$ writing of Appendix~\ref{app:cov}.
+\begin{keybox}
+\textbf{Mixing law without a reset.} Under (i)--(v) the mixing fraction $s=\ell(\mathcal K_0Q)$ is positive and at
+most one, and $\epsilon D$ becomes exponentially distributed with rate $\kappa/s$. The mean order is
+$s/(\kappa\epsilon)+O(1)$: the mixing fraction times the memory time $1/(\kappa\epsilon)$.
+\end{keybox}
 
-\emph{Step 2: the surviving covariance.} Let $\mathcal P_\epsilon$ be the spectral projector of the simple eigenvalue in (iv);
-it depends smoothly on $\epsilon$ and $\mathcal P_0X=R\,\ell(X)$. On the complement $(1-\mathcal T_\epsilon)^{-1}$ stays bounded,
-while on the slow direction it divides by $\kappa\epsilon+O(\epsilon^2)$. Since $\mathcal P_\epsilon V_\epsilon=\epsilon^2\ell(V_*)R+O(\epsilon^3)$,
-\begin{equation}
-\begin{aligned}
-  \Sigma_\epsilon&=(1-\mathcal T_\epsilon)^{-1}V_\epsilon=\epsilon\,C_*+O(\epsilon^2),\\
-  C_*&=\frac{\ell(V_*)}{\kappa}\,R .
-\end{aligned}
-\end{equation}
-
-\emph{Step 3: every fixed order is small.} By (ii) the spectral radius of $\mathcal B_\epsilon$ stays below one, so
-$(1-\mathcal B_\epsilon)^{-1}$ is bounded. Equation~\eqref{eq:recursion} then gives $G_1=O(\epsilon^2)$ and, since $\mathcal K_\epsilon$ is
-bounded, $G_k=O(\epsilon^2)$ for every fixed $k$. Its share of the observed variance of a readout $M$ tends to zero
-whenever $\Tr(MC_*M^{\mathsf T})>0$. For the ideal memory of a readout with several features we also need $MC_*M^{\mathsf T}$
-to have full rank on the measured support, so that $(M\Sigma_\epsilon M^{\mathsf T})^+=O(\epsilon^{-1})$; for a single observable
-this holds trivially.
-
-\emph{Step 4: the number of inputs.} At $\epsilon=0$ the order transfer $\mathcal F_0=(1-\mathcal B_0)^{-1}\mathcal K_0$ has the same
-fixed points as $\mathcal T_0$, because $\mathcal F_0X=X$ is equivalent to $(1-\mathcal B_0)X=\mathcal T_0X-\mathcal B_0X$. Its left fixed
-functional is $\ell_F=\ell\circ(1-\mathcal B_0)$, since $\ell_F(\mathcal F_0X)=\ell(\mathcal K_0X)=\ell(X)-\ell(\mathcal B_0X)$. Define
-\begin{equation}
-  s=\ell_F(R)=\ell(\mathcal K_0R).
-\end{equation}
-Because $\mathcal K_0X=\mathbb E[(A_{u,0}-\bar A_0)X(A_{u,0}-\bar A_0)^{\mathsf T}]$, the matrix $\mathcal K_0R$ is positive and
-$s=1-\ell(\mathcal B_0R)$ lies between 0 and 1; for the same reason $\ell(\mathcal B_0Y)\le\ell(\mathcal T_0Y)=\ell(Y)$ for every
-$Y\succeq0$. If $s$ vanished, then $0\le\ell(\mathcal B_0^j\mathcal K_0R)\le s=0$ for every $j$, and the Neumann series
-$\mathcal F_0=\sum_{j\ge0}\mathcal B_0^j\mathcal K_0$ would give $\ell(\mathcal F_0R)=0$, which contradicts $\mathcal F_0R=R$ and
-$\ell(R)=1$. So $s>0$. The fixed space of $\mathcal F_0$ is spanned by $R$, and because $\ell_F(R)=s\neq0$ the eigenvalue one
-has no Jordan chain, so it is simple. Differentiating $(1-\mathcal B_\epsilon)\mathcal F_\epsilon=\mathcal T_\epsilon-\mathcal B_\epsilon$ at $\epsilon=0$ and applying it to $R$
-gives $(1-\mathcal B_0)\mathcal F_0'R=\mathcal T_0'R$, hence $\ell_F(\mathcal F_0'R)=\ell(\mathcal T_0'R)=-\kappa$. First-order
-perturbation of the simple eigenvalue then gives the order eigenvalue
-\begin{equation}
-  \mu_\epsilon=1-\beta\epsilon+O(\epsilon^2),\qquad \beta=\frac{\kappa}{s}.
-\end{equation}
-Insert $z=e^{-\lambda\epsilon}$ into Eq.~\eqref{eq:generating}. The other eigenvalues of $\mathcal F_0$ have modulus at most
-one, because by (iii) and the positivity argument of Appendix~\ref{app:gen} the spectral radius of $\mathcal F_\epsilon$ is
-below one for $\epsilon>0$, and by the simplicity shown above they differ from one, so only $\mu_\epsilon$ gives a divergent
-resolvent term. Since $G_1=(1-\mathcal B_\epsilon)^{-1}V_\epsilon$ and $\ell_F$ is taken at $\epsilon=0$,
-$\ell_F(G_1)=\ell(V_\epsilon)+O(\epsilon^3)=\epsilon^2\ell(V_*)+O(\epsilon^3)$, and
-\begin{equation}
-\begin{aligned}
-  \sum_{k\ge1}e^{-\lambda\epsilon k}G_k&=\frac{\epsilon\,\ell(V_*)}{s(\lambda+\beta)}\,R+O(\epsilon^2)\\
-  &=\epsilon\,C_*\,\frac{\beta}{\lambda+\beta}+O(\epsilon^2).
-\end{aligned}
-\end{equation}
-Divided by $\Sigma_\epsilon$ from step 2 this is the Laplace transform of $\mathrm{Exp}(\beta)$, for the share of observed
-variance and, under the rank condition of step 3, for the ideal memory. The second identity in
-Eq.~\eqref{eq:generating} gives $\mathbb ED_\epsilon=1/(\beta\epsilon)+O(1)=s/(\kappa\epsilon)+O(1)$: $s$ is the mixing
-fraction of the channel and $1/(\kappa\epsilon)$ its memory time. For the reset model, $\mathcal T_p=(1-p)^2\mathcal T_0$ gives
-$\kappa=2$, $R=1$ and $\ell=\Tr/n$, so $s=1-\|A\|_F^2/n$ and $\beta=2/s$ as in Appendix~\ref{app:inputs}.
+\emph{Proof.} Steps 1 and 2 carry over. The stationary mean is of order $\epsilon$ by (i) and (ii), and the slow
+eigenvalue piles the written covariance up along $Q$,
+\begin{equation*}
+  \Sigma=\epsilon\,\frac{\ell(V_*)}{\kappa}\,Q+O(\epsilon^2),
+\end{equation*}
+and every fixed order carries a covariance of order $\epsilon^2$. For the memory of a readout with several features we
+also need $Q$ to have full rank on what the readout measures; for one observable this holds trivially. In step 3,
+$\mathcal F_0$ has the same fixed points as $\mathcal T_0$, so $Q$ spans them, and $\ell\circ(1-\mathcal B_0)$ is its
+left eigenvector, with value $\ell(\mathcal K_0Q)=s$ on $Q$. Differentiating $(1-\mathcal B)\mathcal F=\mathcal K$ at
+$\epsilon=0$ and applying it to $Q$ gives $(1-\mathcal B_0)\mathcal F_0'Q=\mathcal T_0'Q$, whose weight
+$\ell(\mathcal T_0'Q)=-\kappa$ is the rate of the slow eigenvalue of $\mathcal T$. The order eigenvalue is
+therefore $1-(\kappa/s)\epsilon+O(\epsilon^2)$, and the Laplace transform follows as before. It remains to show that $s$ is positive, which also makes the eigenvalue
+simple. Because $\mathcal K_0$ maps positive matrices to positive matrices and $\ell$ is nonnegative on them,
+$\ell(\mathcal B_0Y)\le\ell(\mathcal T_0Y)=\ell(Y)$ for every positive $Y$, so $0\le\ell(\mathcal
+B_0^j\mathcal K_0Q)\le s\le1$ for every $j$. If $s$ vanished, the series $\mathcal F_0=\sum_j\mathcal B_0^j\mathcal
+K_0$ would give $\ell(\mathcal F_0Q)=0$, which contradicts $\mathcal F_0Q=Q$ and $\ell(Q)=1$.
 
 \subsection{Numerical check}
-Figure~\ref{fig:law} compares the law with exact moments. For each dimension $d=2,3,4$ we draw two families of three
-Haar unitaries applied with probabilities $(0.2,0.3,0.5)$, each with two reset states (a basis state and a random pure
-state) and two readouts (all coordinates or one random direction). Up to $K=\lceil6/(\beta p)\rceil$ we evaluate the
-remaining share $\Tr[\Sigma_y^+M\mathcal F^K(\Sigma)M^{\mathsf T}]/q$. Over these 24 reservoirs and readouts the rates lie
-between 2.89 and 4.00, and the largest deviation from $e^{-\beta pK}$ falls from 0.082 at $p=0.03$ to 0.0034 at
-$p=0.001$; Fig.~\ref{fig:law} shows one of them.
+Figure~\ref{fig:law} compares the law with exact moments. Beyond the reservoir shown, we tested 24 reservoirs and
+readouts: in dimensions two, three and four, two families of three random unitaries applied with probabilities 0.2,
+0.3 and 0.5, each with two reset states (a basis state and a random pure state) and two readouts (all coordinates or
+one random direction). The largest deviation from the law shrinks in proportion to $p$, from 0.08 at $p=3\%$ to 0.003 at
+$p=0.1\%$. The five-spin reservoir follows the law as well (Fig.~\ref{fig:mixing}c): at the largest memories
+computed, $s\,t_{\mathrm{mem}}\approx20$, products of more than $K$ inputs carry the share
+$e^{-K/(s\,t_{\mathrm{mem}})}$ of the capacity to within 0.07 with opposite phases and 0.14 with local loss.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig5_law.pdf}
-\caption{\textbf{The mixing law.} Share of the ideal memory carried by products of more than $K$ inputs, for one
-qubit reservoir with a reset to a basis state and a scalar readout, at reset probabilities $p=3\%$, 1\% and 0.3\%
-(light to dark). Lines: exact moments; circles: the law $e^{-\beta pK}$ with $\beta=2/s=2.89$.}
+\includegraphics[width=\columnwidth]{figures/figA_law.pdf}
+\caption{\textbf{The mixing law.} Share of the capacity carried by products of more than $K$ inputs, for one qubit
+reservoir with a reset to a basis state and a single readout, at reset probabilities $p$ per step. Lines: exact
+moments; circles: the law $e^{-K/(s\,t_{\mathrm{mem}})}$.}
 \label{fig:law}
 \end{figure}
 
 \section{One qubit in closed form}
 \label{app:qubit}
-During one unit of time the qubit evolves under $u\theta Z/2$ and the jump $\sqrt\epsilon\,|{+x}\rangle\langle{-x}|$,
-with signs $u=\pm1$, and is read along $Y$. In the Bloch plane, $\dot x=-\epsilon(x-1)-u\theta y$ and
-$\dot y=u\theta x-\epsilon y/2$. For $u=+1$ write the step as
-\begin{equation}
-  e^{B}=\begin{pmatrix}a&-b\\ b&d\end{pmatrix},\qquad B=\begin{pmatrix}-\epsilon&-\theta\\ \theta&-\epsilon/2\end{pmatrix},
-\end{equation}
-with offset $(f,g)=\int_0^1e^{tB}(\epsilon,0)\,dt$; the opposite sign reverses $b$ and $g$. The stationary mean is
-$(m,0)$ with $m=f/(1-a)$, and each input writes $u\,(0,v)$ with $v=bm+g$, along the measured axis.
+This appendix solves the qubit of Sec.~\ref{sec:writing} exactly. It shows how mixing and the size of the stored
+signal depend on the turn per input and on the relaxation rate, and why the turn must shrink as the square root of
+the rate.
 
-The mean step is diagonal, while adding an input interchanges the two axes, so $Y$ carries only odd orders. By
-Eq.~\eqref{eq:recursion} the variance passes from $y$ to $x$ with factor $b^2/(1-a^2)$ and back with $b^2/(1-d^2)$.
-With $\chi$ their product,
+\paragraph{The model.}
+The qubit relaxes towards $+X$ at a rate $\epsilon$, through the jump $\sqrt\epsilon\,|{+x}\rangle\langle{-x}|$, and
+the input $u=\pm1$ turns it about $Z$ by $u\theta$ per unit time. Each input lasts one unit of time, and the qubit is
+read along $Y$. In the Bloch plane,
 \begin{equation}
-\begin{aligned}
-  C_{2j+1}&=(1-\chi)\chi^j, &\qquad \mathbb ED&=\frac{1+\chi}{1-\chi},\\
-  \mathrm{Var}\,Y&=\frac{v^2}{(1-d^2)(1-\chi)},
-\end{aligned}
+  \dot x=-\epsilon(x-1)-u\theta y,\qquad \dot y=u\theta x-\tfrac12\epsilon y .
+  \label{eq:bloch}
 \end{equation}
-and the share of single past inputs is $d^2(1-\chi)$.
-At fixed $\theta$ with $\sin\theta\neq0$, $1-\chi=3\epsilon/\sin^2\theta+O(\epsilon^2)$, so
-$\epsilon D\to\mathrm{Exp}\bigl(3/(2\sin^2\theta)\bigr)$ and the share of single inputs vanishes even for exact
-expectation values. If instead $\theta^2/\epsilon\to\nu>0$, then $a=1-(1+\nu/2)\epsilon$, $d=1-(1+\nu)\epsilon/2$ to first
-order, $b\sim\theta$, $f\sim\epsilon$ and
-\begin{equation}
-  \chi\to\frac{\nu^2}{(\nu+2)(\nu+1)},\quad \mathrm{Var}\,Y\to\frac{4\nu}{(\nu+2)(3\nu+2)} .
-\end{equation}
-The mean order stays finite, the share of single past inputs tends to $1-\chi$, and since the recall beyond delay
-$\tau$ is the fraction $d^{2\tau}$, the range obeys $\epsilon\tau_{90}\to\ln10/(1+\nu)$. The variance peaks at
-$\nu=2/\sqrt3$. For
-$\theta^2\gg\epsilon$ it vanishes as $4\epsilon/(3\theta^2)$ and for $\theta^2\ll\epsilon$ as $\theta^2/\epsilon$, so among power
-laws for the angle only $\theta\propto\sqrt\epsilon$ keeps a finite signal. Density-matrix propagation reproduces these
-expressions to relative error below $10^{-12}$ at 25 parameter pairs.
+Over one step this is a linear map of $(x,y)$ plus an offset. For $u=+1$ the map has the form
+$\bigl(\begin{smallmatrix}a&-b\\ b&d\end{smallmatrix}\bigr)$ and the offset is $(f,g)$; for $u=-1$ the signs of $b$
+and $g$ flip. The input-averaged step is therefore diagonal, the stationary mean lies on the $X$ axis at
+$m=f/(1-a)$, and each input writes $u\,v$, with $v=bm+g$, along the measured axis $Y$.
 
-\section{The three-spin reservoir at strong loss}
+\paragraph{How the orders arise.}
+The averaged step keeps the two axes apart, while the input-dependent part swaps them. A signal written into $Y$ must
+pass through $X$ and back to pick up more inputs, so $Y$ carries only odd orders. By the
+recursion~\eqref{eq:recursion}, covariance passes from $Y$ to $X$ with the factor $b^2/(1-a^2)$ and back with
+$b^2/(1-d^2)$. Call the product of the two factors $\chi$. Order $2j+1$ then carries the share $(1-\chi)\chi^j$ of
+the capacity of $Y$, and
+\begin{equation}
+  \mathbb ED=\frac{1+\chi}{1-\chi},\qquad \mathrm{Var}\,Y=\frac{v^2}{(1-d^2)(1-\chi)} ;
+  \label{eq:qubit}
+\end{equation}
+single past inputs carry the share $d^2(1-\chi)$.
+
+\paragraph{Fixed turn.}
+Let the relaxation slow down, $\epsilon\to0$, at a fixed angle $\theta$ with $\sin\theta\neq0$. Then
+$1-\chi=3\epsilon/\sin^2\theta+O(\epsilon^2)$: the order grows as $1/\epsilon$, $\epsilon D$ becomes exponentially
+distributed with rate $3/(2\sin^2\theta)$, and the share of single inputs vanishes, even for exact expectation values.
+
+\paragraph{Gentle writing.}
+If instead $\theta^2/\epsilon$ approaches a constant $\nu$, then to first order $a=1-(1+\nu/2)\epsilon$ and
+$d=1-(1+\nu)\epsilon/2$, with $b\approx\theta$ and $f\approx\epsilon$, and as $\epsilon\to0$
+\begin{equation}
+  \begin{aligned}
+    \chi&\to\frac{\nu^2}{(\nu+2)(\nu+1)},\\
+    \mathrm{Var}\,Y&\to\frac{4\nu}{(\nu+2)(3\nu+2)} .
+  \end{aligned}
+  \label{eq:qubitlimit}
+\end{equation}
+The mean order stays finite, and single past inputs keep the share $1-\chi$. Their recall beyond delay $\tau$ is the
+fraction $d^{2\tau}$ of the total, so the range that holds 90\% of it grows as $1/\epsilon$:
+$\epsilon\tau_{90}\to\ln10/(1+\nu)$.
+
+\paragraph{The best turn.}
+The signal of Eq.~\eqref{eq:qubitlimit} is largest at $\nu=2/\sqrt3$ (Fig.~\ref{fig:mixing}d). For $\nu\gg1$ it
+vanishes as $4/(3\nu)$, because later inputs scramble earlier ones; for $\nu\ll1$ it vanishes as $\nu$, because each input writes too
+little. Among power laws $\theta\propto\epsilon^\alpha$, only $\alpha=1/2$ keeps a finite signal: the turn must fall as
+the square root of the relaxation rate, that is, as one over the square root of the memory time. Direct propagation
+of the density matrix reproduces all these expressions.
+
+\section{Three spins at strong loss}
 \label{app:spins}
-\emph{Idea.} At strong loss one step of the full master equation is, up to corrections of order $\epsilon=1/\gamma$, a
-rotation of the dark subspace. With a fixed amplitude the two signs rotate differently; a single slow covariance
-builds up, and the physical-channel version of the mixing law applies. With a scaled amplitude both signs give nearly
-the same
-rotation; the signal is written on the scale of the leakage and accumulates in six slow directions, which we follow
-explicitly. Both arguments end in finitely many strict inequalities, which we enclose in interval arithmetic.
+\begin{keybox}
+\textbf{What we prove.} Take three spins with one shared channel of opposite phases, Eq.~\eqref{eq:H3}, the four
+Hamiltonians H1--H4 of Table~\ref{tab:spins}, and every Hamiltonian whose three couplings lie in a small box around
+theirs. As $\gamma$ grows:
+\begin{itemize}[leftmargin=*,itemsep=2pt,topsep=4pt]
+\item at a fixed input amplitude, the order of the memory of $X_1$, divided by $\gamma$, becomes exponentially
+  distributed, and the signal in $X_1$ falls as $1/\gamma$ (boxes of half-width 1/32);
+\item with the amplitude scaled as $8/\sqrt\gamma$, single past inputs keep a finite share of the capacity of $X_1$,
+  and the range of delays that holds 90\% of their recall grows in proportion to $\gamma$ (boxes of half-width
+  1/512).
+\end{itemize}
+\end{keybox}
 
-\subsection{What is proven}
-For the four Hamiltonians of Table~\ref{tab:spins} and every Hamiltonian whose three couplings lie within $1/32$ of
-theirs: with $\eta=1$, the order of the $X_1$ memory divided by $\gamma$ becomes exponentially distributed with a rate
-$\beta_{\mathrm{spin}}$, and the variance of $X_1$ falls as $1/\gamma$. For the same four Hamiltonians and couplings
-within $1/512$: with $\eta=8/\sqrt\gamma$, the recall of single past inputs from $X_1$ tends to a positive constant, and
-its range divided by $\gamma$ tends to a positive constant.
+\paragraph{Model and computations.}
+The three spins evolve under
+\begin{equation}
+  H_\eta(u)=\sum_{i<j}J_{ij}X_iX_j+\tfrac12\sum_iZ_i+\tfrac{3+\eta u}{4}\sum_iX_i
+  \label{eq:H3}
+\end{equation}
+with one jump $\sqrt\gamma\,(\sigma_1^--\sigma_2^--\sigma_3^-)$, steps of $\Delta t=1/2$ and signs $u=\pm1$, at
+$\eta=1$ (fixed amplitude) or $\eta=8/\sqrt\gamma$ (gentle writing). The couplings of the four Hamiltonians H1--H4
+are drawn from fixed seeds. For each loss rate we exponentiate the full generator for both signs, solve the
+stationary moment equations and evaluate Eq.~\eqref{eq:recursion} for $X_1$ until 99.99\% of its memory is accounted
+for. The range $\tau_{90}$ is the smallest delay beyond which less than a tenth of the recall of single inputs
+remains.
+
+\paragraph{Both regimes.}
+At a fixed input amplitude the order of the memory grows in proportion to $\gamma$ and single inputs lose their share
+(Fig.~\ref{fig:spins}a), while the signal in a measured spin shrinks as $1/\gamma$. With the amplitude
+$\eta_0/\sqrt\gamma$ the order stays small (Fig.~\ref{fig:spins}b), single inputs keep a finite share, the signal stays
+finite, and the range of delays over which single inputs are recalled grows in proportion to $\gamma$. How readable
+the memory is depends on the prefactor $\eta_0$ as on the turn for the qubit: at $\eta_0=8$ single inputs keep between
+8\% and 81\% of the capacity of $X_1$ for the four Hamiltonians (Table~\ref{tab:spins}), and for H3 this share rises to
+67\% at $\eta_0=2$, with a signal 25 times smaller.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/figC_spins.pdf}
+\caption{\textbf{Three spins, both regimes.} One shared channel of opposite phases, Hamiltonian H3: share of the
+capacity of $X_1$ carried by products of $k$ inputs, per unit $\ln k$, at a fixed input amplitude (a) and with gentle
+writing, amplitude $8/\sqrt\gamma$ (b); dashed: mean order. Exact moments.}
+\label{fig:spins}
+\end{figure}
+
+\paragraph{Idea.}
+At strong loss, one step of the full master equation is a rotation of the three dark states, up to corrections of
+order $\epsilon=1/\gamma$. At a fixed amplitude the two signs of the input rotate the dark states differently. The
+stored covariance then has a single slow direction, and the mixing law without a reset applies
+(Appendix~\ref{app:physical}). With gentle writing both signs give almost the same rotation. The signal is
+written on the scale of the leak and collects in six slow directions, which we follow explicitly. Both arguments end
+in finitely many strict inequalities, which a computer checks with rigorous error bounds.
 
 \begin{table}[t]
-\caption{\label{tab:spins}Strong-loss limits for $X_1$ in the four three-spin reservoirs: rate of the order
-distribution at $\eta=1$ (certified); share of single past inputs and range at $\eta=8/\sqrt\gamma$, evaluated at
-$\gamma=2^{16}$.}
+\caption{\label{tab:spins}Strong-loss limits for $X_1$ in the four three-spin reservoirs. Fixed amplitude: rate of
+the exponential law of the order divided by $\gamma$ (certified). Gentle writing: share of single past inputs and
+range of their recall divided by $\gamma$, evaluated at $\gamma=2^{16}$.}
 \centering\footnotesize
 \begin{tabular}{lccc}
 \toprule
- & $\beta_{\mathrm{spin}}$ & single-input share & range$/\gamma$\\\midrule
+ & rate & single-input share & range$/\gamma$\\\midrule
 H1 & 78.6 & 0.81 & 0.50\\
 H2 & 91.7 & 0.29 & 0.18\\
 H3 & 61.4 & 0.08 & 0.24\\
 H4 & 132.5 & 0.14 & 0.50\\
 \bottomrule
 \end{tabular}
-
 \end{table}
 
-\subsection{The slow part of a step}
-Let $\mathcal D$ be the dissipator at unit loss. Its dark space is spanned by the vacuum and the
-single-excitation states with coefficients $(0,1,-1)/\sqrt2$ and $(2,1,1)/\sqrt6$; the jump is injective on two and
-three excitations, so the kernel of $\mathcal D$ consists of the nine operators on the dark qutrit and all other
-eigenvalues have negative real part. With $R$ embedding a Hermitian dark basis, $R^\flat=R^{\mathsf T}(\mathcal D+RR^{\mathsf T})^{-1}$,
-$\mathcal P=RR^\flat$ and $\mathcal S=(\mathcal D+\mathcal P)^{-1}-\mathcal P$, perturbing the zero block of
-$\mathcal D+\epsilon\mathcal H_u$ gives
+\paragraph{One step at strong loss.}
+The jump $\sqrt\gamma\,(\sigma_1^--\sigma_2^--\sigma_3^-)$ leaves three dark states: the state with no excitation
+and the two single-excitation states with amplitudes $(0,1,-1)/\sqrt2$ and $(2,1,1)/\sqrt6$, which are orthogonal to
+the phases of the channel. It empties every other state, so at unit loss rate only the nine operators on the dark
+states do not decay. Let $R$ embed these nine coordinates into the full operator space and $R^\flat$ project back
+along the decaying operators. Expanding one step in $\epsilon$ gives
 \begin{equation}
-  e^{\Delta t(\mathcal D/\epsilon+\mathcal H_u)}=RE_uR^\flat+\epsilon Z_u+O(\epsilon^2),
+  E_u=R\,e^{\Delta t\,R^\flat\mathcal H_uR}R^\flat+\epsilon Z_u+O(\epsilon^2),
   \label{eq:slowstep}
 \end{equation}
-with $E_u=e^{\Delta t\,R^\flat\mathcal H_uR}$,
-where $Z_u$ contains the two boundary terms $-\mathcal S\mathcal H_uRE_uR^\flat$ and $-RE_uR^\flat\mathcal H_u\mathcal S$ and the
-leak $-\Delta t\,R^\flat\mathcal H_u\mathcal S\mathcal H_uR$ inside the exponential.
+where $\mathcal H_u$ is the commutator with the Hamiltonian of input $u$. The first term rotates the dark states. The
+correction $Z_u$ collects the brief excursions into bright states: one at the start of the step, one at its end, and
+the leak of Eq.~\eqref{eq:reduced} in between.
 
-\subsection{Fixed amplitude}
-At $\eta=1$ the dark rotations $O_u$ of the two signs differ. Two finite tests show that their mean is mixing and that
-the identity is the only fixed dark covariance: $\|\bar O^{4096}\|_F<0.013$, and $1-T_D+vv^{\mathsf T}$ is invertible,
-where $T_DX=\mathbb E[O_uXO_u^{\mathsf T}]$ and $v=1/\sqrt8$. The first-order terms of Eq.~\eqref{eq:slowstep} give the
-writing strength $w$, the decay rate $\kappa$ of the slow covariance and the mixing fraction
-$s_0=1-\|\bar O\|_F^2/8$, all certified positive. The physical-channel version of the mixing law then gives
-$\beta_{\mathrm{spin}}=\kappa/s_0$, and the variance of $X_1$ is $\tfrac43(w/\kappa)\epsilon+O(\epsilon^2)$ because $X_1$
-has overlap $1/6$ with the slow covariance. Throughout the boxes of half-width $1/32$, a coupling change $r$ moves each
-dark rotation by at most $3r$, and ball arithmetic keeps $w$, $\kappa$ and $s_0$ above 0.0001, 3.53 and 0.052.
+\paragraph{Fixed amplitude.}
+At $\eta=1$ the dark rotations $O_u$ of the two signs differ, and the computer checks the conditions of the mixing law
+without a reset on the eight traceless dark coordinates. The average rotation forgets; the identity is the only
+covariance that the random rotations leave unchanged; and three constants from the first-order terms of
+Eq.~\eqref{eq:slowstep} are positive: the strength with which an input writes, the rate $\kappa$ at which the slow
+covariance leaks, and the mixing fraction $s_0=1-\|\mathbb EO_u\|_F^2/8$. The law then gives an exponential
+distribution of the order divided by $\gamma$, with rate $\kappa/s_0$ (Table~\ref{tab:spins}), and the variance of
+$X_1$ falls as $\epsilon$. A change $r$ of the couplings moves each dark rotation by at most $3r$, which lets the
+checks cover the boxes of half-width 1/32.
 
-\subsection{Scaled amplitude}
-At $\eta=g\sqrt\epsilon$, $g=8$, both signs give the same leading rotation $E$. A block exponential of the static,
-drive and leak generators gives the mean step $E+\epsilon E_1$ and the fluctuating part $u\sqrt\epsilon D_1$. The six
-coherence phases of the static dark Hamiltonian are separated from one another and from one, so the unit-eigenvalue
-space of $E$ contains only populations, on which $E_1$ generates a population dynamics with a unique stationary state
-$m_*$. The inputs therefore write $\pm\sqrt\epsilon\,v$ with $v=D_1m_*$, which lies in the coherence planes. The fixed
-covariances of the rotation form a six-dimensional space: three population covariances and one identity per coherence
-plane. On it the first-order generators
-\begin{equation}
-\begin{aligned}
-  K_BX&=\mathcal P_6(E_1'XO^{\mathsf T}+OXE_1'^{\mathsf T}),\\
-  K_TX&=K_BX+\mathcal P_6(D_1'XD_1'^{\mathsf T})
-\end{aligned}
-\end{equation}
-are certified stable, and the summed linear response and the full covariance converge to $W_*=-K_B^{-1}\mathcal P_6(vv^{\mathsf T})$
-and $\Sigma_*=-K_T^{-1}\mathcal P_6(vv^{\mathsf T})$. The recall of single inputs from $X_1$ tends to
-$a^{\mathsf T}W_*a/a^{\mathsf T}\Sigma_*a$, and after $t/\epsilon$ steps the remaining fraction is
-$a^{\mathsf T}e^{tK_B}W_*a/a^{\mathsf T}W_*a$, which crosses $0.1$ once; this crossing is the range divided by $\gamma$.
-Interval tests bracket it to $4\times10^{-6}$. The certificates show $a^{\mathsf T}W_*a>0$, and since
-$\Sigma_*\succeq W_*$ the limiting share is positive; the archived certificates state this numerator bound through the
-recall of a readout with 1000 shots, which has the same numerator. On the boxes of half-width $1/512$, Sturm counts
-and Weyl's bound keep the six phases separated and $-(K+K^{\mathsf T})$ positive definite for both generators, so the
-limits stay positive.
+\paragraph{Gentle writing.}
+At $\eta=8\sqrt\epsilon$ both signs give the same leading rotation $E$, generated by the static part of the dark
+Hamiltonian. The input enters at order $\sqrt\epsilon$ and the leak at order $\epsilon$. Expanding the step to this order
+gives the mean step $E+\epsilon E_1$ and the input-dependent part $u\sqrt\epsilon\,\Delta_1$.
 
-The single-input shares in Table~\ref{tab:spins} range from 0.08 to 0.81 because the limit compares two rates of the
-same order in $\epsilon$: $K_B$, at which the mean step lets a stored signal decay, and the extra term of $K_T$, at
-which the random signs of later inputs turn it into products. Their ratio depends on the couplings through the dark
-energies and the matrix elements of $X_1$ between dark states, so the mean order in the limit runs from 1.4 for H1 to
-5.9 for H3. The boxes are 16 times narrower than for the fixed amplitude because this argument follows the dark
-energy eigenstates themselves: a coupling change $r$ moves each eigenprojector by up to $3r/(\delta-3r)$, where $\delta$ is the
-smallest gap between dark energies, whereas the fixed-amplitude argument needs only the rotations, which move by at
-most $3r$.
+\emph{Where the signal goes.} The rotation $E$ turns each of the three planes of coherence between the dark energy
+levels by its own angle, set by an energy gap, and the six phases of these turns differ from each other and from one.
+So $E$ leaves only the populations unchanged, and on them $E_1$ generates a slow population dynamics with a unique stationary state
+$m_*$. An input therefore writes $\pm\sqrt\epsilon\,v$ with $v=\Delta_1m_*$, which lies in the coherence planes: a new
+input first turns a population into a coherence.
 
-\subsection{Erasing coherence}
+\emph{Six slow directions.} The covariances that $E$ leaves unchanged form a six-dimensional space: the three
+covariances of the two population coordinates and one isotropic covariance in each coherence plane. Over $1/\epsilon$
+steps a covariance in this space changes under two generators, both certified stable. $K_B$ describes how the mean
+step lets a stored signal decay, and $K_T$ adds the random signs of later inputs, which turn a stored signal into
+products. With $P_6$ the projection onto the six directions, the single-input part of the stored covariance and the
+full covariance approach $W_*=-K_B^{-1}P_6(vv^{\mathsf T})$ and $\Sigma_*=-K_T^{-1}P_6(vv^{\mathsf T})$.
+
+\emph{Limits.} With $a$ the coordinates of $X_1$, the share of single past inputs in the memory of $X_1$ tends to
+$a^{\mathsf T}W_*a/a^{\mathsf T}\Sigma_*a$. After $t/\epsilon$ steps the remaining single-input recall is the fraction
+$a^{\mathsf T}e^{tK_B}W_*a/a^{\mathsf T}W_*a$, which crosses 0.1 once; the crossing is the range divided by $\gamma$.
+The certificates show $a^{\mathsf T}W_*a>0$, and since $\Sigma_*\succeq W_*$ the share is positive. In the boxes of
+half-width 1/512 the six angles stay separated and both generators stay stable, so the limits stay positive.
+
+\paragraph{Why coherence carries the memory.}
 Returning bright population to the dark subspace after every step leaves the leading terms of the scaled step
-unchanged, so it keeps the same limits. Dephasing in the dark energy basis removes the coherence planes into which
-$v$ writes. Restricted to populations, the two signs then differ only at order $\epsilon^{3/2}$, because the
-order-$\sqrt\epsilon$ response of a diagonal state is off-diagonal, while the populations still follow $1+\epsilon L$.
-A new input therefore writes a vector of size $\epsilon^{3/2}$, the slow dynamics accumulate its square over
-$1/\epsilon$ steps, and the stored signal is $O(\epsilon^2)$.
+unchanged, so it keeps the same limits. Dephasing in the dark energy basis, by contrast, removes the coherence planes
+into which $v$ writes. Restricted to populations, the two signs then differ only at order $\epsilon^{3/2}$, because the
+response of a population at order $\sqrt\epsilon$ is a coherence, while the populations still follow the slow
+population dynamics. A new input thus writes a vector of size $\epsilon^{3/2}$, the slow dynamics sum its square over
+$1/\epsilon$ steps, and the stored signal is of order $\epsilon^2$: the collapse as $1/\gamma^2$ of
+Sec.~\ref{sec:writing}. Numerically we apply the loss-only projector $\mathcal P$ after every step; one version keeps
+the recovered state, the other also dephases it in the energy basis of the projected Hamiltonian. From $\gamma=2^8$
+to $2^{18}$ the variance of $X_1$ stays between $10^{-4}$ and $2\times10^{-3}$ when the coherences are kept and falls
+as $\gamma^{-2}$, by six orders of magnitude, when they are erased; at a fixed input amplitude it falls as
+$1/\gamma$.
 
-\subsection{Certificates}
+\paragraph{What the computer checks.}
 The attached archive \texttt{spin\_certificates.zip} contains the generators, the exact couplings and the interval
-programs. At 192-bit precision they reproduce the archived enclosures; at 256 bits they check every strict inequality
-above. An independent implementation (see Author contributions) that builds the full finite-rate maps and
-extrapolates to infinite loss agrees
-with the certified rates to $2\times10^{-7}$ and with the limiting recalls to $4\times10^{-9}$.
+programs. They enclose every quantity above in intervals with rigorous rounding (ball arithmetic of Arb, python-flint
+0.9.0) and check each strict inequality: at a fixed amplitude, that the average rotation forgets, that the identity is
+the only fixed covariance and that the writing strength, $\kappa$ and $s_0$ are positive; for gentle writing, that the
+six angles are separated, that both generators are stable, that $a^{\mathsf T}W_*a$ is positive (in the archive, the
+numerator of an auxiliary recall quantity) and where the remaining recall crosses 0.1. At 192 bits they reproduce the
+archived enclosures, and at 256 bits they check every strict inequality. A second program, sharing no routine with
+them (see Author contributions), builds the full finite-rate maps and extrapolates to infinite loss; it agrees with
+the certified rates and limiting recalls to better than one part in a million.
 
-\section{Results of the first version}
-\label{app:v1}
-Table~\ref{tab:v1} repeats the benchmark comparison of the first version~\cite{BaumannV1} at $\gamma=1$, where the
-same jump families have the same total coupling. The shared channel had the largest memory and the smallest NARMA-10
-error but scored below local loss on parity and on closed-loop Mackey--Glass forecasting, two tasks that need products
-of past inputs; at this operating point it also led local loss in memory and NARMA-10 error from four to eight spins.
-Figure~\ref{fig:v1} repeats its finite-sampling test: when the 45 features are estimated from a finite number of
-preparations per step, the advantage of the shared channel over local loss becomes significant only above about
-$2\times10^5$ preparations per step if all spins are read in three grouped settings, and only above about
-$3\times10^6$ if every feature is measured separately.
+\section{Numerical details and supporting checks}
+\label{app:numerics}
+This appendix collects what is needed to reproduce the five-spin results and the checks behind several statements of
+the main text, in the order of the Results.
 
-\begin{table}[h]
-\caption{\label{tab:v1}Benchmark scores of the first version~\cite{BaumannV1} at $\gamma=1$, $h=\Delta t=1/2$, five
-spins and 45 features, for parity read at 15 times within each step: mean over 32, 32, 16 and 64 reservoirs, with the standard error in the last digits in
-parentheses. Memory sums $C_\tau$ over delays 1 to 20 and parity sums a capacity over windows of one to seven inputs
-(larger is better); NARMA-10 and Mackey--Glass forecasting (MG) over 150 closed-loop steps are normalized errors
-(smaller is better). The rows are those of the six jump families studied here; bold marks the best of them.}
-\centering\footnotesize\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lllll}
-\toprule
-family & memory & NARMA-10 & parity & MG\\\midrule
-local & 8.63(7) & 0.315(8) & 4.82(4) & \textbf{0.037(3)}\\
-shared & \textbf{12.21(10)} & \textbf{0.229(6)} & 3.78(3) & 0.097(9)\\
-pairwise & 9.20(8) & 0.289(7) & 4.75(4) & 0.039(4)\\
-gain/loss & 8.31(6) & 0.337(8) & 4.85(4) & 0.046(4)\\
-exchange & 7.41(5) & 0.441(9) & \textbf{5.08(5)} & 0.052(4)\\
-dephasing & 0 & 1.020(6) & 0 & 0.0599(4)\\
-\bottomrule
-\end{tabular}
-\end{table}
+\paragraph{Recall and memory (Sec.~\ref{sec:clock}).}
+Where the figures draw $C_\tau$ against the delay, each delay is averaged with its neighbours, with weights that fall
+linearly to zero at a fifth of the delay; this removes the noise of the finite test set and enters no sum. The maps of
+Fig.~\ref{fig:clock}a,b are computed at $\gamma=0.1$, 0.25 and $2^{-1}$ to $2^6$ in powers of two and interpolate
+between them by shifting each recall profile along the delay. At a fixed amplitude the recall of one and two shared
+channels reaches past the 300 delays summed beyond $\gamma=64$, so Fig.~\ref{fig:clock}c shows them up to
+$\gamma=64$; summed over all delays with exact moments (Sec.~\ref{sec:order}), one shared channel keeps 27 to 35
+units and two channels 26 to 30 from $\gamma=64$ to 256 on two reservoirs. The recall of opposite phases and pairwise
+loss ends well within the window up to $\gamma=256$. With gentle writing, delays beyond 300 would add about 1\% to the
+memory of opposite phases.
 
-\begin{figure}[h]
+\paragraph{Dark states (Sec.~\ref{sec:clock}).}
+For the dark-state model we write $\mathcal P=RR^\flat$ with $R^\flat R=1$, where $R$ embeds the 100 dark coordinates
+$\alpha$, evolve $\alpha$ under Eq.~\eqref{eq:reduced} and record the same 45 features of the full state
+$(R-\mathcal S\mathcal H(u)R/\gamma)\,\alpha$. The readout is trained on these features exactly as for the full
+reservoir; the model itself has no fitted parameter (Fig.~\ref{fig:darkmodel}a). For the erasure test we replace the
+dark coordinates after every step by their time average, $r\mapsto r-RR^\flat(r-\bar r)$; the control erases the dark
+subspace rotated by a random product of single-spin unitaries. Recall is then measured at delays 1 to 100 with 800
+training, 200 validation and 800 test inputs (Fig.~\ref{fig:darkmodel}b).
+
+For one shared channel $\gamma\bar\kappa$ approaches $\kappa_{\mathrm c}=2.945$, to four digits from $\gamma=512$ to
+16384, so $t_{\mathrm f}$ grows in proportion to $\gamma$, while from $\gamma=4096$ to 16384 it changes only from 56 to
+58 steps with opposite phases and from 103 to 114 with pairwise loss. The second-order calculation of
+Eq.~\eqref{eq:reduced} gives the same $\kappa_{\mathrm c}$ at five spins and 1.4, 2.1 and 3.4 at three, four and six
+spins: the leak coefficient grows only slowly with the size.
+
+\begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig6_sampling.pdf}
-\caption{\label{fig:v1}\textbf{Finite sampling in the first version.} Memory of one shared channel minus that of
-local loss at $\gamma=1$ when every feature is estimated from a finite number of preparations per step, with all spins
-read along $X$, $Y$ or $Z$ in three grouped settings (solid) or each feature measured separately (dashed). Lines and
-bands show the mean and 95\% interval over 20 reservoirs; the open circle is exact. Data from
-Ref.~\cite{BaumannV1}.}
+\includegraphics[width=\columnwidth]{figures/figD_dark.pdf}
+\caption{\textbf{Dark states hold the memory.} One shared channel.
+\textbf{a}~Recall of the full reservoir and of the dark-state model, with no fitted parameter.
+\textbf{b}~Recall at $\gamma=16$ of the intact reservoir (dark line) and when the dark coordinates, or a copy of the
+dark subspace rotated by random single-spin unitaries, are erased after every step.}
+\label{fig:darkmodel}
 \end{figure}
 
+\paragraph{Time to forget and phases (Sec.~\ref{sec:mixing}).}
+We compute $t_{\mathrm f}$ at $\eta=1$, $\tfrac12$, $\tfrac14$ and $\tfrac18$, for $\gamma$ from $2^{-8}$ to $2^6$ with
+local loss and from $2^{-2}$ to $2^{12}$ with opposite phases, on eight reservoirs. With the slowest mode in place of the mean rate, the curves of Fig.~\ref{fig:mixing}a collapse as well, to within
+11\% wherever forgetting takes more than four steps (3\% beyond $\gamma\eta^2=32$). With the input on spin 1 only
+(four reservoirs) the collapses hold to within a few percent. On one reservoir with exact moments, the memory peak of
+local loss moves from $\gamma\approx1/16$ at $\eta=1$ to $1/64$ at $\eta=\tfrac18$, while the best memory rises from
+16 to 39 units; the mean over eight reservoirs at $\eta=1$ is 14.5 (Table~\ref{tab:memory}).
+
+The write per input into the dark states (Fig.~\ref{fig:mixing}b) is $2\|R^\flat[E(\tfrac34)-E(\tfrac14)]r_*\|$ at the
+stationary state $r_*$ of the equal-phase channel, for the input patterns $(1,\dots,1)$ and $\sqrt2\cos(2\pi i/5)$
+multiplying $X_i$. Along the phases it falls as $1/\gamma$, to 0.003 at $\gamma=128$; across them it falls only
+slowly, to 0.18. Opposite phases are the equal-phase channel with the field on spins 4 and 5 reversed, up to a
+relabelling of the random couplings (a turn of these spins by $\pi$ about $Z$).
+
+The range $\tau_{90}$ of the exact linear recall grows with the clock but not in proportion: along the gentle line of
+opposite phases, where $\gamma\eta^2$ is fixed and $t_{\mathrm f}$ grows as $\gamma$, it grows from 32 steps at
+$\gamma=16$ to 155 at $\gamma=256$, about as $\gamma^{0.6}$, while the memory approaches the 45 features.
+
+\paragraph{Orders and capacities (Secs.~\ref{sec:mixing} and~\ref{sec:writing}).}
+For the five-spin reservoir the expectations over the input in Eq.~\eqref{eq:recursion} use six-point
+Gauss--Legendre quadrature, and the equations $X-\bar AX\bar A^{\mathsf T}=C$ are solved in the eigenbasis of $\bar A$.
+The shares of the 45 features are summed until the rest falls below $10^{-8}$, or until successive orders shrink at a
+settled ratio, whose geometric tail we add. The linear recall follows from the same moments,
+$C_\tau=c_\tau^{\mathsf T}\Sigma_y^{-1}c_\tau/\mathrm{Var}\,u$ with $c_\tau$ the covariance of the features with
+$u_{t-\tau}$ and $\Sigma_y$ their covariance; it reproduces the simulated memories to a median of 2\%, and where much
+of the recall is faint, as for opposite phases at $\gamma=256$ and the full amplitude, it finds up to a fifth more than
+the finite training set of the simulations. Three steps of inverse iteration on $\mathcal T$, from the input's
+covariance $V$ and from the identity, give $t_{\mathrm{mem}}$, $Q$ and $\ell$. Loss rates run in powers of four, at
+the full amplitude from 1 to 4096 for opposite phases and from 4 down to $1/1024$ for local loss, and with gentle
+writing to 16384 and $1/4096$, on four reservoirs (two at the two largest memory times); the control at $\gamma=1$ runs
+down to $\eta=1/32$ on two reservoirs, and local loss at $\eta=\tfrac12$, $\tfrac14$ and $\tfrac18$ on one. With local loss at the full amplitude the mean order stays within 2.2 of $s\,t_{\mathrm{mem}}$
+up to $s\,t_{\mathrm{mem}}=18$ ($\gamma=1/1024$).
+
+Capacities by polynomial degree follow Ref.~\cite{Dambre2012}: products of Legendre polynomials in the past inputs
+$2u-1$, up to total degree four within finite windows of delays, fitted by the same features and kept above a noise
+floor from shuffled inputs. At $\gamma=1$ degrees three and four carry 8.2 units with one shared channel, 15.9 with
+opposite phases and 16.4 with local loss.
+
+We measure the size of the signal by the variance of a feature over the test inputs, averaged over the features: with
+opposite phases about $5\times10^{-6}$ with gentle writing from $\gamma=16$ to 256 and $8\times10^{-5}$ at the full
+amplitude; with local loss and gentle writing $7\times10^{-5}$ at $\gamma=1/32$; for the equal-phase channel at the
+full amplitude from $2\times10^{-4}$ at $\gamma=1$ to $4\times10^{-7}$ at $\gamma=64$.
+
+\paragraph{Sampling and polarization (Sec.~\ref{sec:price}).}
+Eight times more training inputs change the memory at $10^6$ and $10^8$ preparations by less than 1.3 units. At
+$10^{10}$ opposite phases with gentle writing peak near $\gamma=64$ with 22 units, and at $10^8$ weak local loss with
+gentle writing keeps 19. At $10^4$ preparations the full amplitude keeps 9 units with local loss and 5 with opposite
+phases, against 4 and 1 with gentle writing; with the input on a single spin, which writes more gently by itself, the
+crossings move to about $3\times10^6$ and $6\times10^7$ preparations (four reservoirs).
+
+For the matched clock we find, for every shape and reservoir, the loss rate at which $t_{\mathrm{leak}}=32$ steps, at
+weak loss without protected operators and at strong loss with them, and run the reservoir there with
+$\eta=\sqrt{4/32}$. The write is $-i[H_{\mathrm{in}},\rho_*]$ with $H_{\mathrm{in}}=h\sum_iX_i$ and $\rho_*$ the
+stationary state, projected spectrally onto the slow modes: the protected ones, or without protected operators those
+decaying at most four times faster than the slowest. The memory that survives $10^6$ preparations rises with the
+write, from 0.3 units for the shared channels to 17 for local loss.
+
+\paragraph{Ordinary noise (Sec.~\ref{sec:discussion}).}
+Adding local loss $\sqrt{\gamma_{\mathrm{loc}}}\,\sigma_i^-$ to a shared channel gives
+$\bar\kappa=\kappa_{\mathrm c}/\gamma+\kappa_{\mathrm l}\gamma_{\mathrm{loc}}$, where to first order $\kappa_{\mathrm l}$
+is the trace of the added dissipator on the 99 slow dark modes divided by 99, $140/99\approx1.414$; local dephasing
+$\sqrt{\gamma_\phi}\,\sigma_i^z$ adds $\kappa_\phi\gamma_\phi$ with $\kappa_\phi=403.2/99\approx4.073$. For $\gamma$ from
+32 to 256 and noise rates from 0.001 to 0.1 the full spectra reproduce both coefficients to within 0.2\%. A time to
+forget of at least $T$ steps, $\kappa_{\mathrm c}/\gamma+\kappa_{\mathrm l}\gamma_{\mathrm{loc}}\le1/(\Delta t\,T)$, then
+needs $\gamma/\gamma_{\mathrm{loc}}\ge4\kappa_{\mathrm c}\kappa_{\mathrm l}\,\Delta t^2T^2\approx4.2\,T^2$, or $12\,T^2$
+for dephasing.

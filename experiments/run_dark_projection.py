@@ -2,6 +2,7 @@
 """Zeno projection onto the dark subspace of a shared channel.
 
 spectrum    eigenvalues of the input-averaged step map along the strength.
+rates       decay rates of the generator at the mean input along the strength: dark and bright bands.
 memory      recall to long delays for five channel patterns, with capacity by degree;
             for a shared channel also the reservoir with the bright states eliminated.
 far         the eliminated model alone, far beyond the reach of the full simulation.
@@ -164,6 +165,23 @@ def spectrum_case(task):
     lam = np.linalg.eigvals(mean)
     lam = lam[np.argsort(-np.abs(lam))]
     return {"seed": seed, "design": name, "gamma": gamma, "re": lam.real[:130].tolist(), "im": lam.imag[:130].tolist()}
+
+
+def rates_case(task):
+    """Decay rates of the generator at the mean input: the slowest and the fastest mode and, when the unit-rate
+    dissipator protects operators, the edges of the dark band (one mode for each protected operator besides the
+    stationary state) and of the bright band above it."""
+    seed, name, gamma = task
+    J, _ = psim.couplings_and_inputs(seed, 10)
+    H0, H1 = hamiltonian(J)
+    D = dissipator(name)
+    protected = int(np.sum(np.linalg.svd(D, compute_uv=False) < 1e-9))
+    rates = np.sort(-np.linalg.eigvals(H0 + 0.5 * H1 + gamma * D).real)[1:]
+    out = {"seed": seed, "design": name, "gamma": gamma, "protected": protected,
+           "slowest": float(rates[0]), "fastest": float(rates[-1])}
+    if protected > 1:
+        out["dark_top"], out["bright_bottom"] = float(rates[protected - 2]), float(rates[protected - 1])
+    return out
 
 
 def memory_case(task):
@@ -341,13 +359,16 @@ def forecast_case(task):
             "constant": float(np.mean((series[wash + train - 1] - truth) ** 2))}
 
 
-STAGES = {"spectrum": spectrum_case, "memory": memory_case, "far": far_case, "removal": removal_case,
-          "write": write_case, "size": size_case, "size_edge": size_case, "local": local_case, "forecast": forecast_case}
+STAGES = {"spectrum": spectrum_case, "rates": rates_case, "memory": memory_case, "far": far_case,
+          "removal": removal_case, "write": write_case, "size": size_case, "size_edge": size_case, "local": local_case,
+          "forecast": forecast_case}
 
 
 def jobs(stage, seeds):
     if stage == "spectrum":
         return [(s, n, g) for g in GAMMAS for s in seeds for n in ("shared", "separate")]
+    if stage == "rates":
+        return [(s, n, float(g)) for g in np.geomspace(0.1, 1000.0, 81) for s in seeds for n in ("shared", "separate")]
     if stage == "memory":
         return [(s, n, g) for n in ("shared", "separate", "signed", "groups", "pair") for g in GAMMAS for s in seeds]
     if stage == "far":

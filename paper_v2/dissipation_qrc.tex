@@ -10,12 +10,14 @@
 \usepackage{amsmath,amssymb}
 \usepackage{amsthm}
 \usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[skins,breakable]{tcolorbox}
 \usepackage{graphicx}
 \usepackage{placeins}
 \usepackage{float}
 \usepackage{needspace}
 \usepackage{microtype}
-\usepackage[numbers]{natbib}
+\usepackage[numbers,sort&compress]{natbib}
 \usepackage{hyperref}
 \usepackage{orcidlink}
 
@@ -83,6 +85,16 @@
 \fancyfoot[C]{\sffamily\textcolor{quantumviolet}{\thepage}}
 \makeatother
 
+% Floats sit a little closer to the text than the class default of 20 pt.
+\setlength{\textfloatsep}{14pt plus 2pt minus 4pt}
+\setlength{\dbltextfloatsep}{14pt plus 2pt minus 4pt}
+
+% Key statements sit in a light box with a violet rule; the theorem inside adds no extra space.
+\newtcolorbox{keybox}{enhanced,breakable,sharp corners,boxrule=0pt,leftrule=1.5pt,
+  colback=quantumviolet!4,colframe=quantumviolet!70,left=6pt,right=6pt,top=5pt,bottom=5pt,
+  before skip=10pt plus 2pt,after skip=10pt plus 2pt}
+\newtheoremstyle{keyresult}{0pt}{0pt}{\normalfont}{}{\bfseries}{.}{0.5em}{}
+\theoremstyle{keyresult}
 \newtheorem{theorem}{Theorem}
 \newcommand{\D}{\mathcal{D}}
 \newcommand{\Tr}{\operatorname{Tr}}
@@ -96,12 +108,12 @@
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\floatpagefraction}{0.5}
 
-\hypersetup{pdftitle={Stronger dissipation, longer memory: engineering the jump operators of quantum reservoirs},
+\hypersetup{pdftitle={How dissipation engineering shapes the memory of quantum reservoirs},
  pdfsubject={Dissipation engineering, dark states and the memory of quantum reservoirs}}
 \begin{document}
 \input{sections/certificate_attachment}
 
-\title{Stronger dissipation, longer memory: engineering the jump operators of quantum reservoirs}
+\title{How dissipation engineering shapes the memory of quantum reservoirs}
 
 \author[qar,mobile]{Markus Baumann}
 \orcid{0009-0007-3575-1006}
@@ -128,7 +140,9 @@ Ludwig-Maximilians-Universit\"at M\"unchen, Munich, Germany}
 \input{sections/intro}
 \input{sections/results}
 \input{sections/discussion}
+\input{sections/methods}
 
+% Back matter after the main text (Methods is a main-text section), before the appendices.
 \acknowledgments{The authors thank the Quantum Applications and Research Laboratory and the Mobile and
 Distributed Systems Group at Ludwig-Maximilians-Universit\"at M\"unchen for institutional support.}
 
@@ -141,15 +155,19 @@ The code, the data behind every figure and the interval certificates of the thre
 \section*{Author contributions}
 M.B. contributed to conception, methodology, software, analysis, visualization and writing. I.F. and J.W.
 contributed to methodology, interpretation and editing. C.L.-P. and J.S. contributed to supervision and
-conceptual development. OpenAI Codex assisted with drafting, literature checks, derivations, code, numerical
-experiments, figures and verification software; it also wrote the independent finite-rate implementation of
-Appendix~\ref{app:spins} as a separate program that shares no routine with the certificate programs. All
-AI-assisted material was independently reviewed and verified by the authors, who take full responsibility for the
-scientific content and final manuscript.
-
-\input{sections/methods}
+conceptual development. Two AI assistants were used. OpenAI Codex assisted with drafting, literature checks,
+derivations, code, numerical experiments and the verification software, including the certificate programs of
+Appendix~\ref{app:spins} and a second, separate finite-rate implementation that shares no routine with them.
+Anthropic's Claude Code assisted with drafting and editing the text, the figures, the numerical checks of
+Secs.~\ref{sec:writing} and~\ref{sec:price}, and the runs of the clock and sampling tests. All AI-assisted
+material was reviewed and verified by the authors, who take full responsibility for the scientific content and
+final manuscript.
 
 \appendix
+% Appendix equations are numbered (A1), (A2), ..., restarting in each appendix.
+\counterwithin*{equation}{section}
+\renewcommand{\theequation}{\thesection\arabic{equation}}
+\renewcommand{\theHequation}{\thesection.\arabic{equation}}
 \input{sections/appendix}
 
 \begingroup

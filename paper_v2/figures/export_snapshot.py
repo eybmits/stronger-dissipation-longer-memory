@@ -2,7 +2,7 @@
 """Reduce the raw records to the numbers the figures show, in paper_v2/data/snapshot.json.
 
 Sources (exact expectation values, except for the finite-sampling test of the first version):
-  results/dark_projection/{memory,spectrum,removal,write}.jsonl   five-spin reservoir, five families
+  results/dark_projection/{memory,spectrum,rates,removal,write}.jsonl   five-spin reservoir, five shapes
   results/jump_families/{memory,kernel}.jsonl                     exchange, dephasing, gain/loss; kernels
   results/spin_orders/orders.jsonl                                three-spin reservoir, order shares
   results/spin_orders/coherence.json                              three-spin recovery with/without dephasing
@@ -71,12 +71,16 @@ def memory_block(kernel):
             curves = np.array([[by[(s, g)]["memory"] for g in base] for s in seeds])
             rec["curve_mean"] = curves.mean(axis=0).round(5).tolist()
             rec["curve_gamma"] = base
+            # per-reservoir recall at two loss rates, for the bands
+            rec["curve_rows"] = {f"{g:g}": curves[:, base.index(g)].round(4).tolist() for g in (0.25, 64.0)}
         if fam == "shared":
             red = {}
             for g in (4.0, 64.0):
                 full = np.mean([by[(s, g)]["memory"] for s in seeds], axis=0)
                 model = np.mean([by[(s, g)]["reduced"] for s in seeds], axis=0)
-                red[f"{g:g}"] = {"full": full.round(5).tolist(), "reduced": model.round(5).tolist()}
+                red[f"{g:g}"] = {"full": full.round(5).tolist(), "reduced": model.round(5).tolist(),
+                                 "full_rows": np.round([by[(s, g)]["memory"] for s in seeds], 4).tolist(),
+                                 "reduced_rows": np.round([by[(s, g)]["reduced"] for s in seeds], 4).tolist()}
             rec["reduced"] = red
         out[fam] = rec
     return out
@@ -92,6 +96,164 @@ def spectrum_block():
         if (r["design"], r["gamma"]) in (("shared", 1.0), ("shared", 8.0), ("shared", 64.0), ("separate", 8.0)):
             keep[f"{r['design']}_{r['gamma']:g}"] = {"re": r["re"], "im": r["im"]}
     return {"seed": seed, "maps": keep}
+
+
+def rates_block(seed):
+    """Decay rates of the generator at the mean input along the loss, for the reservoir of the spectrum block."""
+    rows = [r for r in jsonl(RES / "dark_projection" / "rates.jsonl") if r["seed"] == seed]
+    out = {"seed": seed}
+    for fam, keys in (("shared", ("slowest", "dark_top", "bright_bottom", "fastest")), ("separate", ("slowest",))):
+        sel = sorted((r for r in rows if r["design"] == fam), key=lambda r: r["gamma"])
+        out[fam] = {"gamma": [round(r["gamma"], 6) for r in sel], "protected": sel[0]["protected"],
+                    **{k: [float(f"{r[k]:.6g}") for r in sel] for k in keys}}
+    return out
+
+
+def clock_block():
+    """Run A: time to forget along the loss at four input amplitudes, local loss and opposite phases."""
+    path = RES / "clock" / "clock.jsonl"
+    if not path.exists():
+        return None
+    rows = jsonl(path)
+    out = {}
+    for fam in sorted({r["design"] for r in rows}):
+        out[fam] = {}
+        for amp in sorted({r["amplitude"] for r in rows}, reverse=True):
+            sel = [r for r in rows if r["design"] == fam and r["amplitude"] == amp]
+            gammas = sorted({r["gamma"] for r in sel})
+            seeds = sorted({r["seed"] for r in sel})
+            by = {(r["seed"], r["gamma"]): r["forget"] for r in sel}
+            out[fam][f"{amp:g}"] = {"gamma": gammas,
+                                    "forget": [[float(f"{by[(s, g)]:.6g}") if (s, g) in by else None for g in gammas] for s in seeds]}
+    return out
+
+
+def sampling_block():
+    """Run B: memory from exact features and from finite preparations per setting and step."""
+    path = RES / "clock" / "sampling.jsonl"
+    if not path.exists():
+        return None
+    rows = jsonl(path)
+    if (RES / "clock" / "line.jsonl").exists():
+        rows += jsonl(RES / "clock" / "line.jsonl")
+    keys = sorted({(r["design"], r["rule"], r["gamma"]) for r in rows})
+    out = []
+    for design, rule, gamma in keys:
+        sel = sorted((r for r in rows if (r["design"], r["rule"], r["gamma"]) == (design, rule, gamma)),
+                     key=lambda r: r["seed"])
+        rec = {"design": design, "rule": rule, "gamma": gamma, "eta": sel[0]["eta"], "seeds": len(sel)}
+        for k in ("exact", "var_mean", "shots_1000000", "shots_10000000", "shots_100000000"):
+            rec[k] = [r[k] for r in sel]
+        rec["curve"] = np.mean([r["curve"] for r in sel], axis=0).round(5).tolist()
+        rec["curve_1e8"] = np.mean([r["curve_100000000"] for r in sel], axis=0).round(5).tolist()
+        out.append(rec)
+    return out
+
+
+def budget_block():
+    """Memory at preparations per setting and step from 10^5 to 10^8.5, with the range tau_90 of the exact recall."""
+    path = RES / "clock" / "budget.jsonl"
+    if not path.exists():
+        return None
+    rows = jsonl(path)
+    out = []
+    for key in sorted({(r["design"], r["rule"], r["gamma"]) for r in rows}):
+        sel = sorted((r for r in rows if (r["design"], r["rule"], r["gamma"]) == key), key=lambda r: r["seed"])
+        out.append({"design": key[0], "rule": key[1], "gamma": key[2], "eta": sel[0]["eta"], "seeds": len(sel),
+                    "shots": sel[0]["shots"], "exact": [r["exact"] for r in sel], "tau90": [r["tau90"] for r in sel],
+                    "memory": [[round(m, 4) for m in r["memory"]] for r in sel]})
+    return out
+
+
+def budget_low_block():
+    """Memory at 10^3 to 10^4.5 preparations per setting and step along the same lines (own random stream)."""
+    path = RES / "clock" / "budget_low.jsonl"
+    if not path.exists():
+        return None
+    rows = jsonl(path)
+    out = []
+    for key in sorted({(r["design"], r["rule"], r["gamma"]) for r in rows}):
+        sel = sorted((r for r in rows if (r["design"], r["rule"], r["gamma"]) == key), key=lambda r: r["seed"])
+        out.append({"design": key[0], "rule": key[1], "gamma": key[2], "seeds": [r["seed"] for r in sel],
+                    "shots": sel[0]["shots"], "memory": [[round(m, 4) for m in r["memory"]] for r in sel]})
+    return out
+
+
+def five_orders_block():
+    """Order of the five-spin memory from exact moments (run_five_spin_orders.py), per design, loss rate and
+    amplitude, one entry per reservoir."""
+    path = RES / "five_spin_orders" / "orders.jsonl"
+    if not path.exists():
+        return None
+    rows = jsonl(path)
+    keys = ("seed", "mean_order", "single", "memory300", "memory", "tau90", "order_ratio", "t_mem", "s", "law_mean",
+            "mu_settled")
+    out = []
+    for key in sorted({(r["design"], r["gamma"], r["eta"]) for r in rows}):
+        sel = sorted((r for r in rows if (r["design"], r["gamma"], r["eta"]) == key), key=lambda r: r["seed"])
+        entry = {"design": key[0], "gamma": key[1], "eta": key[2]}
+        for k in keys:
+            if all(k in r for r in sel):
+                entry[k] = [r[k] for r in sel]
+        entry["edges"] = [r["edges"] for r in sel]
+        entry["binned"] = [[round(b, 6) for b in r["binned"]] for r in sel]
+        out.append(entry)
+    return out
+
+
+def pattern_block():
+    """The clock and the sampling test with the input on spin 1 only."""
+    out = {}
+    path = RES / "clock" / "pattern_clock.jsonl"
+    if path.exists():
+        rows = jsonl(path)
+        out["clock"] = {}
+        for fam in sorted({r["design"] for r in rows}):
+            out["clock"][fam] = {}
+            for amp in sorted({r["amplitude"] for r in rows}, reverse=True):
+                sel = [r for r in rows if r["design"] == fam and r["amplitude"] == amp]
+                gammas = sorted({r["gamma"] for r in sel})
+                seeds = sorted({r["seed"] for r in sel})
+                by = {(r["seed"], r["gamma"]): r["forget"] for r in sel}
+                out["clock"][fam][f"{amp:g}"] = {"gamma": gammas, "forget": [[by.get((s, g)) for g in gammas]
+                                                                             for s in seeds]}
+    path = RES / "clock" / "pattern_sampling.jsonl"
+    if path.exists():
+        rows = jsonl(path)
+        out["sampling"] = [{"design": d, "rule": r_, "gamma": g,
+                            **{k: [r[k] for r in rows if (r["design"], r["rule"], r["gamma"]) == (d, r_, g)]
+                               for k in ("exact", "shots_1000000", "var_mean")}}
+                           for d, r_, g in sorted({(r["design"], r["rule"], r["gamma"]) for r in rows})]
+    return out or None
+
+
+def polarization_block():
+    """Run C: all eight shapes at a matched clock and input amplitude."""
+    path = RES / "clock" / "polarization.jsonl"
+    if not path.exists():
+        return None
+    rows = jsonl(path)
+    out = {}
+    for fam in FAMILIES:
+        sel = sorted((r for r in rows if r["design"] == fam), key=lambda r: r["seed"])
+        if sel:
+            out[fam] = {k: [r[k] for r in sel] for k in ("gamma", "eta", "write_slow", "write_all", "polarization",
+                                                           "var_mean", "exact", "shots_1000000", "leak_time")}
+    return out
+
+
+def prefactor_block():
+    """Three spins at gamma = 4096: share of single past inputs and signal size against the prefactor."""
+    path = RES / "spin_orders" / "prefactor.jsonl"
+    if not path.exists():
+        return None
+    rows = jsonl(path)
+    seeds = [8675309, 424242, 97531, 123457]          # H1-H4, as in experiments/run_spin_orders.py
+    out = {"order": seeds}
+    for s in seeds:
+        sel = sorted((r for r in rows if r["seed"] == s), key=lambda r: r["prefactor"])
+        out[str(s)] = {k: [r[k] for r in sel] for k in ("prefactor", "single", "size")}
+    return out
 
 
 def removal_block():
@@ -257,9 +419,16 @@ def v1_block():
 
 def main():
     kernel = {r["design"]: r["kernel"] for r in jsonl(RES / "jump_families" / "kernel.jsonl")}
-    snap = {"kernel": kernel, "memory": memory_block(kernel), "spectrum": spectrum_block(),
-            "removal": removal_block(), "write": write_block(), "spin": spin_block(), "law": law_block(),
-            "v1": v1_block(), "review": review_block(kernel)}
+    spectrum = spectrum_block()
+    snap = {"kernel": kernel, "memory": memory_block(kernel), "spectrum": spectrum,
+            "rates": rates_block(spectrum["seed"]), "removal": removal_block(), "write": write_block(),
+            "spin": spin_block(), "law": law_block(), "v1": v1_block(), "review": review_block(kernel)}
+    for key, block in (("clock", clock_block()), ("sampling", sampling_block()), ("budget", budget_block()),
+                       ("pattern", pattern_block()), ("polarization", polarization_block()),
+                       ("prefactor", prefactor_block()), ("budget_low", budget_low_block()),
+                       ("five_orders", five_orders_block())):
+        if block is not None:
+            snap[key] = block
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(snap, separators=(",", ":")) + "\n")
     done = {f: snap["memory"][f]["complete"] for f in snap["memory"]}

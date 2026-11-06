@@ -1,232 +1,291 @@
-\section{Results}
-
-\subsection{Same total leaking, different channels}
-We use the driven spin reservoir of Ref.~\cite{Sannia2024}. In step $t$ an input $u_t\in[0,1]$, drawn
-independently, is held for a time $\Delta t=1/2$ while $N=5$ spins evolve under
+\section{Same total coupling, different shapes}
+\label{sec:shapes}
+We use the driven spin reservoir of Ref.~\cite{Sannia2024}. Five spins interact through random couplings $J_{ij}$,
+and in each step a random input $u$ between 0 and 1 sets the strength of a transverse field for a time $\Delta t$:
 \begin{equation}
-  H(u)=\sum_{i<j}J_{ij}X_iX_j+h\sum_iZ_i+h(1+u)\sum_iX_i ,
+  H(u)=\sum_{i<j}J_{ij}X_iX_j+h\sum_iZ_i+h(1+u)\sum_iX_i .
   \label{eq:H}
 \end{equation}
-with $h=1/2$ and couplings $J_{ij}$ drawn uniformly from $[-1,1]$; the transverse field thus runs from $h$ to
-$2h$. The environment adds a Lindblad dissipator~\cite{Gorini1976,Lindblad1976},
+The environment acts through jump operators $L_k$ in a Lindblad master equation~\cite{Gorini1976,Lindblad1976},
 \begin{equation}
-  \dot\rho=-i[H(u),\rho]+\sum_k\Bigl(L_k\rho L_k^\dagger-\tfrac12\{L_k^\dagger L_k,\rho\}\Bigr).
+  \dot\rho=-i[H(u),\rho]+\sum_k\Bigl(L_k\rho L_k^\dagger-\tfrac12\{L_k^\dagger L_k,\rho\}\Bigr),
   \label{eq:lindblad}
 \end{equation}
-We compare the jump families of Fig.~\ref{fig:concept}b: local loss $L_i=\sqrt\gamma\,\sigma_i^-$; one shared
-channel $L=\sqrt\gamma\sum_ic_i\sigma_i^-$ with equal phases $c_i=1$ or mixed phases $c=(1,1,1,-1,-1)$; two
-shared channels on three and two spins; pairwise loss $\sigma_i^-\sigma_j^-$; local loss with exchange
-$\sigma_i^-\sigma_j^+$, which carry 40\% and 60\% of the coupling; local loss and gain with rates in the ratio
-$1:0.3$; and local dephasing $\sigma_i^z$. Any positive mixture in the exchange and gain/loss families leaves a
-single stationary state, as local loss does. Every family has the
-same total coupling $\Tr K=80\gamma$, where $K=\sum_kL_k^\dagger L_k$ (Methods). This fixes the total amount of
-leaking exactly: averaged over all modes of the reservoir, the decay rate is $\Tr K/2^N$ for every family and every
-Hamiltonian. What differs is how the leaking is distributed.
+with all $L_k$ scaled by one loss rate $\gamma$. A linear readout of 45 features, the single-spin and two-spin
+expectation values, is trained to name the input from $\tau$ steps back. Its recall $C_\tau$, between 0 and 1, is the
+squared correlation between the estimate and the input on held-out data. The memory $\sum_\tau C_\tau$ counts
+roughly how many past inputs the reservoir can name, in units with a ceiling of 45; the capacity counts products of
+inputs as well. The memory time $t_{\mathrm{mem}}$, how long a stored signal of any kind survives the leak
+(Sec.~\ref{sec:order}), is the clock of the reservoir. Secs.~\ref{sec:clock}--\ref{sec:writing} use exact
+expectation values and an unregularized readout, an idealization that credits arbitrarily small signals;
+Sec.~\ref{sec:price} counts measurements and decides which clock stays readable.
 
-The decisive difference is what the environment cannot reach. For local loss only the ground state is left alone.
-A shared channel annihilates a whole subspace of dark states, $\binom{N}{\lfloor N/2\rfloor}$ of them on $N$ spins.
-With five spins it has ten, and the dissipator leaves all 100 operators on them unchanged. Pairwise loss and the
-split channel leave six dark states, exchange and gain/loss a single stationary state, and dephasing leaves the 32
-populations of the spin basis but erases every coherence (Fig.~\ref{fig:concept}b).
+We call the set of jump operators the shape of the environment and $\gamma$ its strength. Every shape gets the same
+total coupling $\Tr K=\sum_k\Tr L_k^\dagger L_k$, which fixes the mean decay rate over all $4^N$ modes of the
+reservoir, for every Hamiltonian (Sec.~\ref{sec:methods-shapes}). It does not fix the slow modes, which can move in
+opposite directions, so Sec.~\ref{sec:price} also compares the shapes at a matched clock. Of the eight shapes in
+Table~\ref{tab:families}, four carry the story (Fig.~\ref{fig:concept}b): local loss, where every spin loses its
+excitation on its own; one shared channel, where all spins lose it together with equal phases; the same channel with
+opposite phases on spins 4 and 5; and dephasing, where every spin loses its phase.
 
-A linear readout of the 45 single-spin and same-axis two-spin Pauli expectations reconstructs each past input.
-Its recall $C_\tau\in[0,1]$ is the squared correlation between the estimate and the input $\tau$ steps back on
-held-out data, and the memory $\sum_\tau C_\tau$ sums it over delays up to 300. All expectation values are exact;
-there is no shot noise.
+What tells the shapes apart is what the environment cannot reach. Local loss leaves only the ground state alone. A
+shared channel, with either phases, cannot empty ten dark states and leaves every operator on them, 100 in all,
+unchanged, while dephasing keeps the 32 populations of the spin basis but erases every coherence.
 
-\begin{figure}[!tb]
+\begin{table}[t]
+\caption{\label{tab:families}Shapes of the environment at five spins, each with $\Tr K=80\gamma$, and the number of operators
+that the dissipator leaves unchanged; $i<j$ for pairwise loss, $i\neq j$ for exchange and $c=(1,1,1,-1,-1)$.}
+\centering\footnotesize\setlength{\tabcolsep}{3.4pt}
+\begin{tabular}{lll}
+\toprule
+shape & jump operators & protected\\\midrule
+local & $\sqrt\gamma\,\sigma_i^-$ & 1\\
+shared & $\sqrt\gamma\sum_i\sigma_i^-$ & 100\\
+opposite phases & $\sqrt\gamma\sum_ic_i\sigma_i^-$ & 100\\
+two channels & $\sqrt\gamma\sum_{i\le3}\sigma_i^-$, $\sqrt\gamma\sum_{i>3}\sigma_i^-$ & 36\\
+pairwise & $\sqrt\gamma\,\sigma_i^-\sigma_j^-$ & 36\\
+exchange & $\sqrt{0.4\gamma}\,\sigma_i^-$, $\sqrt{0.3\gamma}\,\sigma_i^-\sigma_j^+$ & 1\\
+gain/loss & $\sqrt{\gamma/1.3}\,\sigma_i^-$, $\sqrt{0.3\gamma/1.3}\,\sigma_i^+$ & 1\\
+dephasing & $\sqrt{\gamma/2}\,\sigma_i^z$ & 32\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Results}
+\label{sec:results}
+The argument has three steps: which way the clock runs, how hard the input may write, and which clock stays readable
+once measurements are counted.
+
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig2_families.pdf}
-\caption{\textbf{Same total leaking, opposite outcomes.}
-Five spins at equal total coupling; mean and 16th--84th percentiles over eight reservoirs.
-\textbf{a}~Recall of the input $\tau$ steps back at weak ($\gamma=1/4$, light) and strong ($\gamma=64$, dark) loss.
-\textbf{b}~Memory at a fixed input amplitude; one and two shared channels stop at $\gamma=64$, where their recall
-outgrows the 300 delays summed (Methods). Dash-dotted with circles: mixed phases with the input amplitude scaled as
-$\min(1,\gamma^{-1/2})$; dashed: the limit set by the 45 features.
-\textbf{c}~Time to forget, from the slow modes of the input-averaged step. Dephasing protects populations into which
-the input never writes, so its memory in \textbf{b} is zero.}
-\label{fig:families}
-\end{figure}
+\includegraphics[width=\textwidth]{figures/fig2_clock.pdf}
+\caption{\textbf{Same total coupling, opposite clocks.}
+\textbf{a,b}~Recall $C_\tau$ of the input $\tau$ steps back against the loss rate, with local loss (a) and one
+shared channel (b); dashed: the delay below which half of the memory lies.
+\textbf{c}~Memory at the full input amplitude, for the four shapes that carry the story and, in grey, the others:
+exchange and gain/loss (dashed) follow local loss, two channels the shared one, and pairwise loss opposite phases;
+one and two shared channels end at $\gamma=64$ (Appendix~\ref{app:numerics}); circles: gentle writing
+(Sec.~\ref{sec:writing}).
+\textbf{d}~Decay rates of one reservoir at the mean input: bright and dark modes of a shared channel; dashed: the
+slowest mode of local loss.}
+\label{fig:clock}
+\end{figure*}
 
-\subsection{More loss, longer memory}
-Figure~\ref{fig:families} shows the surprise. At weak dissipation all families behave alike, as the equal coupling
-suggests (Fig.~\ref{fig:families}a,b). As $\gamma$ grows they split in opposite directions. With local loss, recall
-retreats to ever shorter delays, until at $\gamma=64$ only the last input is left (Fig.~\ref{fig:families}a), and the
-memory falls steadily (Fig.~\ref{fig:families}b). With a shared channel the memory dips and then, beyond
-$\gamma\approx1$, doubles; at $\gamma=64$ the recall is still 0.25 fifty steps back and 0.07 a hundred steps back. Exchange and gain/loss follow
-local loss, and the split channel follows the shared one. Pairwise loss and mixed phases recover after a dip, but only
-to their weak-dissipation level, and at stronger loss their memory falls again; Sec.~\ref{sec:writing} explains why.
+\subsection{The shape sets the direction of the clock}
+\label{sec:clock}
+At weak loss all shapes behave alike; as $\gamma$ grows they split in opposite directions (Fig.~\ref{fig:clock}).
+With local loss, recall retreats to ever shorter delays and the memory falls steadily (Fig.~\ref{fig:clock}a,c). With
+one shared channel the memory first dips and then doubles, and at strong loss inputs fifty steps back are still
+recalled (Fig.~\ref{fig:clock}b,c). The decay rates show the split (Fig.~\ref{fig:clock}d): without protected
+operators the leak grows in proportion to $\gamma$ and the clock speeds up, while with dark states the leak falls as
+$1/\gamma$ and the clock slows down.
 
-The time to forget makes the split quantitative (Fig.~\ref{fig:families}c). We compute it from the slow modes of the
-input-averaged step, the modes that the loss alone leaves untouched. Without protected operators it falls as
-$1/\gamma$. With dark states it grows with $\gamma$: in proportion to $\gamma$ when the input cannot reach the dark
-states directly (one shared channel, two channels), where $\gamma$ times the mean slow decay rate approaches 2.9 for
-one shared channel, on average over the reservoirs. When the input can reach them (mixed phases, pairwise loss), it scrambles the dark states itself,
-and the time to forget levels off, for pairwise loss only at larger $\gamma$ (Methods). Stronger loss slows
-forgetting only when the jump operators leave dark states.
+Why does more loss slow a shared channel down? Take two spins that share one channel (Fig.~\ref{fig:concept}c).
+Their decay amplitudes cancel for the dark state $|{-}\rangle$, which can leak only after the Hamiltonian turns it into
+the bright state $|{+}\rangle$. A strong channel acts like constant checking of whether an excitation has left, and
+such checking holds the state where the answer is no~\cite{Beige2000,FacchiPascazio2002}, the quantum Zeno effect:
+the leak falls as $\Omega^2/\gamma$, where $\Omega$ couples $|{+}\rangle$ and $|{-}\rangle$, just as the slow mode of
+an overdamped oscillator settles more slowly the stronger the friction.
 
-Dephasing shows what protection alone does not provide. Its 32 protected populations also forget ever more slowly,
-yet its memory is zero at every $\gamma$: dephasing and the unitary input both leave the maximally mixed state
-unchanged, and it is the unique stationary state for every input, so the reservoir relaxes to it whatever the input.
-Protection is useful only for what the input can write into it. With exact features, recall counts what is linearly
-recoverable however small the signal; we return to the size of the signal in Sec.~\ref{sec:price}.
+The same holds for any number of spins. At strong loss the reservoir follows its Hamiltonian restricted to the dark
+states, which turns the stored state but cannot make it forget; forgetting enters only at the next order, when the
+Hamiltonian briefly lifts a dark state into a bright one that decays~\cite{Zanardi2014,Reiter2012}. One step is then
+a rotation plus a leak that falls as $1/\gamma$ (Eq.~\eqref{eq:reduced}): a nearly orthogonal map at the edge of
+stability, the classic recipe for a long memory in a network~\cite{White2004}. The size of the reservoir sets only
+the strength of the leak (Appendix~\ref{app:numerics}). Local loss has no such regime: at strong loss it protects only
+the ground state, and a single state cannot hold a record.
 
-\subsection{Dark states that cannot leak}
-Why does more loss help a shared channel? A strong channel acts like constant checking of whether an excitation has
-left, and such checking holds the state where the answer is no~\cite{Beige2000,FacchiPascazio2002}
-(Fig.~\ref{fig:concept}c). At strong loss the reservoir follows, in a first approximation, its Hamiltonian projected onto
-the operators that the dissipator leaves alone, which turns the state but cannot forget. Forgetting enters only in
-the next correction, when the Hamiltonian briefly lifts a dark state into a bright one that
-decays~\cite{Zanardi2014,Reiter2012}:
-\begin{equation}
-  \mathcal G(u)=\mathcal P\mathcal H(u)\mathcal P-\frac1\gamma\,\mathcal P\mathcal H(u)\mathcal S\mathcal H(u)\mathcal P ,
-  \label{eq:reduced}
-\end{equation}
-with $\mathcal H=-i[H,\cdot\,]$, $\mathcal P$ the projector onto the protected operators and $\mathcal S$ the inverse
-of the unit-rate dissipator on the rest (Methods). This is a rotation plus a leak of size $1/\gamma$: an orthogonal
-map at the edge of stability, the classic recipe for long memory in a network~\cite{White2004}.
-Equation~\eqref{eq:reduced} holds for any number of spins, so at strong loss the leak falls as $1/\gamma$ at every
-size; the size sets only its coefficient, which we compute for three to six spins (Methods), and how strong the loss
-must be for this regime to begin.
+Two tests show that the dark states hold the memory (Appendix~\ref{app:numerics}). A model of the ten dark states
+alone, with no fitted parameter, reproduces the recall of the full reservoir within a few percent once the loss is
+moderately strong. Erasing the dark coordinates after every step destroys all memory beyond a few steps, while erasing
+a rotated copy of the same size leaves most of it.
 
-Three tests confirm the picture; Fig.~\ref{fig:dark}a counts the protected operators of every family. At strong
-loss, 99 eigenvalues of the averaged step approach the unit circle, one for each operator on the dark subspace apart
-from the stationary state; with local loss they stay near zero (Fig.~\ref{fig:dark}b). The ten-state model of
-Eq.~\eqref{eq:reduced}, with nothing fitted, reproduces the recall of the full reservoir from $\gamma\approx4$ on,
-within a few percent (Fig.~\ref{fig:dark}c). Erasing the dark coordinates after every step destroys all memory beyond
-a few steps, while erasing a rotated copy of the same dimension leaves most of it (Fig.~\ref{fig:dark}d). The dark
-states hold the memory.
+But lasting is not the same as staying readable. With opposite phases the dark states are just as protected, yet the
+memory climbs back only to its weak-loss level (Fig.~\ref{fig:clock}c): something besides the leak is erasing it.
+Dephasing, too, slows the clock of its protected populations, yet stores nothing (Sec.~\ref{sec:price}).
 
-\begin{figure}[!tb]
+
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig3_dark.pdf}
-\caption{\textbf{Dark states hold the memory.}
-\textbf{a}~Number of operators that each unit-rate dissipator leaves unchanged, at five spins. Rules separate the
-families without a dark state, dephasing, which protects populations only (open circle), and the families with a
-dark subspace.
-\textbf{b}~Eigenvalues of the input-averaged step of one reservoir: one shared channel at $\gamma=1$, 8 and 64
-(light to dark) and local loss at $\gamma=8$.
-\textbf{c}~Recall of the full reservoir (lines) and of the dark-state model of Eq.~\eqref{eq:reduced} (circles),
-with nothing fitted; mean of eight reservoirs.
-\textbf{d}~Recall at $\gamma=16$ when the dark coordinates, or a copy of the dark subspace rotated by random
-single-spin unitaries, are erased after every step; mean and 16th--84th percentiles over eight reservoirs.}
-\label{fig:dark}
-\end{figure}
+\includegraphics[width=\textwidth]{figures/fig3_price.pdf}
+\caption{\textbf{The price of a long memory, and how the input pays it.}
+\textbf{a}~Time to forget $t_{\mathrm f}$ at input amplitudes $\eta=1$, $\tfrac12$, $\tfrac14$ and $\tfrac18$
+(circles, squares, triangles, diamonds), times $\eta^2$, against $\gamma/\eta^2$ for local loss and $\gamma\eta^2$ for
+opposite phases.
+\textbf{b}~Write per input into the dark states of the equal-phase channel, for the input along the phases
+(uniform) and across them (cosine pattern); dotted: $1/\gamma$.
+\textbf{c}~Mean order of the capacity against the mixing fraction times the memory time, at the full amplitude
+(filled; opposite phases from $\gamma=1$ to 4096, local loss from 4 to $1/1024$) and with gentle writing (open);
+dashed: the mixing law.
+\textbf{d}~One qubit in the limit $\epsilon\to0$: stored signal and share of single past inputs against the squared
+turn per memory time; dotted: the largest signal.}
+\label{fig:mixing}
+\end{figure*}
 
-\subsection{A long memory blends its inputs}
-Lasting longer is not the same as staying readable. Every input nudges the stored state a little, and the nudge
-depends on the input (Fig.~\ref{fig:concept}d). Over its memory time the stored direction takes a random walk of
-steps $\pm\theta$ and spreads by about $\theta\sqrt{t_{\mathrm{mem}}}$. While the spread is small, the measured
-projection is linear in each input. Once it reaches about a radian, the projection wraps around: the record of an old
-input survives only multiplied by the inputs that followed it. A linear readout of a few observables recovers single
-inputs; it cannot turn such products back into them. We call the number of distinct inputs that a stored function
-involves its order, and we resolve the memory by order~\cite{Dambre2012,MartinezPenaIPC2023} (Methods).
+\subsection{The price of a long memory}
+\label{sec:mixing}
+That something is the input itself. Every input nudges the stored state a little, and the nudge depends on the input
+(Fig.~\ref{fig:concept}d): to an old input, every newer input is noise. Over the memory time the stored direction
+takes a random walk of small turns $\pm\theta$ and spreads by about $\theta\sqrt{t_{\mathrm{mem}}}$. Once the spread
+reaches about a radian, the record of an old input survives only multiplied by the inputs that followed it, and a
+linear readout cannot turn such products back into single inputs. We say that later inputs scramble the stored
+input.
 
-The simplest protected reservoir is reset to a fixed state with a small probability $p$ in each step and is
-otherwise turned by an input-dependent unitary. The variance of a stored signal then decays over
-$t_{\mathrm{mem}}=1/(2p)$ steps. Write the step in traceless coordinates as an orthogonal map $O(u)$ and call
-$s=1-\|\mathbb EO\|_F^2/n$ the mixing fraction of one input. It measures how hard one input nudges the stored state:
-the mean squared fraction of a randomly oriented state that one input moves away from the average turn. For small
-turns it grows as the square of the input amplitude.
+A single input is thus lost in two ways: it leaks away, and it is scrambled. The time to forget $t_{\mathrm f}$, how
+long one input stays linearly readable, adds both: its rate is the leak plus a scrambling rate that grows as
+$\eta^2$, the squared input amplitude (Sec.~\ref{sec:methods-slow}). Because the leak grows as $\gamma$ with local
+loss and falls as $1/\gamma$ with dark states, $\eta^2t_{\mathrm f}$ should depend on loss and input only through $\gamma/\eta^2$
+with local loss and through $\gamma\eta^2$ with opposite phases. Both collapses hold over a range of 64 in $\eta^2$, and
+they run in opposite directions (Fig.~\ref{fig:mixing}a); they test that leak and scrambling add, not which products
+are stored. With exact readout, then, no loss rate is best on its own: weakening the input moves the best loss rate
+(Appendix~\ref{app:numerics}).
 
-\begin{theorem}[Mixing law]\label{thm:law}
-Let a reservoir be reset with probability $p$ per step and otherwise turned by input-dependent rotations that
-mix the stored state and write a signal (conditions in Appendix~\ref{app:law}). Draw the order $D_p$ of a stored
-function with probability equal to its share of the memory. As $p\to0$, $pD_p$ becomes exponentially distributed,
-with mean
+Here the phases of the channel become a design choice. The dark states are annihilated by the collective lowering
+operator $\sum_ic_i\sigma_i^-$, and an input field $\sum_ic_iX_i$ with the same phases is that operator plus its
+adjoint, so it cannot couple two dark states: it writes only through brief excursions into bright states, and its
+effect falls as $1/\gamma$. An input pattern across the phases writes into the dark states directly, and its effect
+falls only slowly (Fig.~\ref{fig:mixing}b). The uniform input of Eq.~\eqref{eq:H} is of the first kind with equal
+phases, so its time to forget keeps growing in proportion to $\gamma$, and of the second with opposite phases, so its
+time to forget levels off near 56 steps. The choice is fine-tuned: a phase error $\delta$ couples dark states
+directly at order $\delta$, and beyond $\gamma\sim1/\delta$ the equal-phase channel behaves like the one with
+opposite phases.
+
+How many inputs does a scrambled memory mix? We call the number of distinct inputs that a stored function involves its
+order: $u_{t-3}$ alone has order one, $u_{t-3}u_{t-5}$ order two, which splits the information processing
+capacity~\cite{Dambre2012,MartinezPenaIPC2023} by inputs. The simplest reservoir with a long memory is reset to a
+fixed state with a small probability $p$ in each step and otherwise turned by an input-dependent unitary; a stored
+signal then lasts about $t_{\mathrm{mem}}=1/(2p)$ steps. How hard one input nudges
+what is stored is measured by its mixing fraction $s$, between 0 and 1: the part of a stored signal that one input
+turns away from the average turn (Appendix~\ref{app:law}). For small turns it grows as the square of the turn.
+
+\begin{keybox}
+\begin{theorem}[Mixing law, informal; precise form in Appendix~\ref{app:law}]\label{thm:law}
+Let a reservoir be reset with probability $p$ per step and otherwise turned by input-dependent unitaries that mix the
+stored state, leave a single slow direction of the stored covariance, and write a signal (conditions in
+Appendix~\ref{app:law}). Pick a stored function with probability
+equal to its share of the capacity, and let $D$ be its order. As $p\to0$, $D/t_{\mathrm{mem}}$ becomes exponentially
+distributed with mean $s$, and
 \begin{equation*}
-  \mathbb ED_p=s\,t_{\mathrm{mem}}+O(1).
+  \mathbb ED=s\,t_{\mathrm{mem}}+O(1).
 \end{equation*}
 \end{theorem}
+\end{keybox}
 
-In words, a memory blends on average $s\,t_{\mathrm{mem}}$ inputs: how hard one input nudges it times how long it
-lasts. Halving the reset probability doubles the typical order, and any fixed set of orders carries a vanishing share
-of the memory although its total stays constant (Appendix~\ref{app:law}). In a protected reservoir the leakage plays
-the role of $p$, so at a fixed input amplitude a longer memory blends more and more inputs.
+In words, a memory mixes on average $s\,t_{\mathrm{mem}}$ inputs: how hard one input nudges it times how long it
+lasts. The reason is a race: in each step a fraction $s$ of the stored signal picks up one more input, while a
+fraction $1/t_{\mathrm{mem}}$ of it is lost. The law holds for physical channels without a reset as well, with the
+leak in place of the reset (Appendix~\ref{app:physical}). What it needs is a single slow direction of the stored
+covariance, not a single slow mode.
 
-Blending is not only a cost. Products of inputs are the nonlinear memory that tasks such as parity
-need~\cite{Dambre2012,Inubushi2017}, and the law says how many inputs a reservoir combines. In the first version of
-this study the equal-phase shared channel scored below local loss on parity and closed-loop
-forecasting~\cite{BaumannV1} (Appendix~\ref{app:v1}). This is consistent with its input having no matrix element
-between its dark states (Sec.~\ref{sec:writing}): at $\gamma=1$ its readout recovers half as much capacity of
-polynomial degree three and four as that of local loss, while with mixed phases, where the input reaches the dark
-states directly, it recovers as much as with local loss (Methods).
+In the five-spin reservoir the moments give the order distribution exactly (Eq.~\eqref{eq:recursion}). One input
+turns the stored state only slightly, $s\approx0.02$ at the full amplitude. As the memory grows, the mean order with
+opposite phases rises from 1.8 at $\gamma=1$ to 23 at $\gamma=4096$, as the mixing law predicts: it exceeds
+$s\,t_{\mathrm{mem}}$ by 1.3 to 2.0 throughout (Fig.~\ref{fig:mixing}c), and gentle writing (Sec.~\ref{sec:writing})
+keeps it near one. Mixing is not only a cost:
+products of inputs are the nonlinear memory that tasks such as parity need~\cite{Dambre2012,Inubushi2017}, and the
+equal-phase channel, whose uniform input writes gently by itself, keeps about half as much of it as local loss
+(Appendix~\ref{app:numerics}). At a fixed input strength, though, a longer memory is a more scrambled one.
 
-\subsection{Write more gently}
+
+\subsection{The input must follow the clock}
 \label{sec:writing}
-The law also says how to keep a long memory readable: write more gently as it grows. A single qubit that relaxes
-towards $+X$ at rate $\epsilon$, is turned about $Z$ by $\pm\theta$ per input and is read along $Y$ shows the whole
-trade-off in closed form (Fig.~\ref{fig:writing}a, Appendix~\ref{app:qubit}). Everything depends on
-$\theta^2/\epsilon$, the squared turn per memory time. For large values the inputs blend, and they also scramble the
-polarization that each new input tilts, so the stored signal shrinks. For small values each input writes too little.
-The stored signal is largest at $\theta^2/\epsilon=2/\sqrt3$. Both results follow one rule: keep the mixing fraction
-times the memory time of order one. With $s\propto\theta^2$ and $t_{\mathrm{mem}}\propto1/\epsilon$ this means
-$\theta^2\propto\epsilon$: the input amplitude must fall as one over the square root of the memory time, so a memory
-four times longer needs inputs half as strong, with a prefactor set by the reservoir. We call this gentle writing.
+How much gentler must the input get? One qubit shows the trade-off in closed form (Fig.~\ref{fig:mixing}d,
+Appendix~\ref{app:qubit}). It relaxes towards $+X$ at a small rate $\epsilon$, each input turns it about $Z$ by
+$\pm\theta$, and it is read along $Y$. Everything depends on $\theta^2/\epsilon$, the squared turn per memory time.
+When it is large, later inputs scramble earlier ones; when it is small, each input writes too little. The signal is
+largest in between, at $\theta^2/\epsilon=2/\sqrt3$, and a turn that falls exactly as $\epsilon^{1/2}$ is the only
+power law that keeps it finite. We call an input amplitude that follows the clock in this way, falling as one over the
+square root of the memory time, gentle writing: it keeps $s\,t_{\mathrm{mem}}$ fixed as the memory grows.
+
+The five spins follow the same rule in both directions of the clock: the amplitude falls as $1/\sqrt\gamma$ where the
+clock slows with stronger loss, and as $\sqrt\gamma$ where it slows with weaker loss (Fig.~\ref{fig:clock}c,
+circles). With exact readout this more than doubles the linear memory: from 14 to 33 units with local loss at
+$\gamma=\frac1{32}$, and from the best 14.7 at the full amplitude to 36 with opposite phases (Table~\ref{tab:memory}). It needs both knobs: weakening the input alone, or tuning the
+loss alone, falls short. Only the equal-phase channel comes close at the full amplitude, because its uniform input
+already writes gently.
+
+The gain is a reallocation, not free capacity. With exact readout all capacities of a readout add up to its rank, 45
+here~\cite{Dambre2012}, so raising the linear memory from 14 to 33 units leaves at most 12 instead of 31 for products
+of inputs. With opposite phases at $\gamma=256$, single past inputs carry 89\% of the capacity with gentle writing and
+28\% at the full amplitude. Dark states are therefore not what makes a memory long. They keep it long while the
+reservoir dissipates strongly, and they reverse the direction of the clock.
+
+Three spins with one shared channel of opposite phases show both regimes, and there we prove them
+(Appendix~\ref{app:spins}): at a fixed amplitude the order grows in proportion to $\gamma$ and single inputs lose
+their share, while with an amplitude $\eta_0/\sqrt\gamma$ they keep a finite share and their recall reaches ever
+further back.
+
+The memory is written into coherences between dark energy levels; coherence is known to shape the performance of
+spin reservoirs~\cite{Palacios2024}. Erasing these coherences after every input leaves the slow population dynamics
+alike but collapses the stored signal as $1/\gamma^2$, because a new input first turns a population into a coherence
+(Appendix~\ref{app:spins}). A gentler input writes a fainter record. With exact readout this costs nothing; with real
+measurements, faintness has a price.
+
+\begin{table}[t]
+\caption{\label{tab:memory}Linear memory $\sum_\tau C_\tau$ of the five-spin reservoir in units (ceiling 45), mean
+of eight reservoirs; exact readout, or a budget of $10^9$ preparations times replayed steps per output step.}
+\centering\footnotesize\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & local & opposite & equal\\
+ & loss & phases & phases\\\midrule
+tuned loss, $\eta=1$ & 14.5 & 14.7 & 31$^{a}$\\
+weak input$^{b}$ & 16 & 25 & --\\
+gentle writing & 33 ($\gamma=\frac1{32}$) & 36 ($\gamma=256$) & --$^{c}$\\
+$10^9$, $\eta=1$$^{d}$ & 15 ($\gamma\approx\frac1{16}$) & 12 ($\gamma\approx64$) & 12 ($\gamma=1$)$^{e}$\\
+$10^9$, gentle writing & 29 ($\gamma=\frac1{64}$) & 15 ($\gamma\approx64$) & --$^{c}$\\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\raggedright\footnotesize
+$^{a}$At strong loss. $^{b}$At $\gamma=1$ and $\eta=\frac1{32}$, two reservoirs. $^{c}$The uniform input already
+writes gently in this channel. $^{d}$Upper bounds: replaying $\tau_{90}$ charges too little at the full amplitude.
+$^{e}$Smallest loss rate sampled; the memory falls as the loss grows.
+\end{table}
+
+\subsection{What survives measurement: cool, don't randomize}
+\label{sec:price}
+Exact expectation values stand for averages over infinitely many runs, and they flatter a long memory. A memory that
+follows the clock grows longer, not larger: it cannot exceed the 45 features, so each delay is recalled more faintly.
+With local loss at $\gamma=64$ the previous input still moves the state by about $10^{-9}$, enough for a perfect
+recall with exact readout, but at $10^8$ preparations per step its recall drops to 0.002.
+
+Finite sampling limits what any physical reservoir resolves~\cite{Hu2023}, so we estimate every feature from $n$
+preparations per measurement setting and step, with all spins read along $X$, $Y$ or $Z$, and choose the
+regularization of the readout on held-out data (Sec.~\ref{sec:methods-sampling}). Each preparation must also replay
+the input history that the memory still holds~\cite{Cindrak2024}, and this history grows with the clock. A fair
+comparison therefore fixes the budget, preparations times replayed steps per output step: three settings, each with
+$n$ preparations that replay the range $\tau_{90}$ holding 90\% of the exact recall. At the full amplitude this charges
+too little, so those curves are upper bounds.
+
+At a fixed budget the loss rate has an optimum again, and the budget sets it (Fig.~\ref{fig:sampling}a). At $10^9$
+preparations times replayed steps, weak local loss with gentle writing keeps the most, 29 units, against 15 for
+opposite phases at their optimum near $\gamma=64$ (Table~\ref{tab:memory}). Gentle writing pays once each setting is
+prepared about $10^5$ times per step with local loss and $2\times10^6$ times with opposite phases. The equal-phase
+channel, whose exact memory grows with the loss, now loses memory as the loss grows, and the dark-state memory, as
+long as that of weak local loss, is more than ten times fainter.
+
+What sets the size of the signal appears to be the state that the dissipation leaves behind. An input acts on the
+stationary state $\rho_*$ through the commutator with its Hamiltonian, and only the part of this change that lies on
+the slow modes is remembered; we call its size the write onto the slow modes. At one matched clock and input
+amplitude, the feature variance of the seven shapes that write follows this write over four orders of magnitude
+(Fig.~\ref{fig:sampling}b). Dephasing, being unital, leaves a fully mixed stationary state that the input cannot tilt,
+and it writes and stores nothing. Shared channels leave a polarized state that the uniform input tilts only through
+bright states, and they store almost nothing; local and pairwise loss cool the spins into a state that the input
+tilts directly, and they store the most. With earlier findings that non-unital damping helps and unital noise
+hurts~\cite{Ricci2026,Domingo2023}, this gives a heuristic, shown here for one clock, one class of Hamiltonians and a
+uniform input: a reservoir should forget by cooling, towards a low-entropy state, not by randomizing.
 
 \begin{figure}[!tb]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig4_writing.pdf}
-\caption{\textbf{Writing more gently keeps a long memory readable.}
-\textbf{a}~One qubit relaxing at rate $\epsilon$ and turned by $\pm\theta$ per input, in the limit $\epsilon\to0$ at
-fixed $\theta^2/\epsilon$: size of the stored signal (normalized to its maximum at $\theta^2/\epsilon=2/\sqrt3$, dotted)
-and share of single past inputs (dashed).
-\textbf{b,c}~Three-spin reservoir with one shared channel of mixed phases (Hamiltonian H3): share of the memory of
-$X_1$ carried by products of $k$ inputs, per unit $\ln k$, for a fixed input amplitude (b) and for an amplitude
-scaled as $8/\sqrt\gamma$ (c); dashed: mean order; one colour scale for both.}
-\label{fig:writing}
+\includegraphics[width=\columnwidth]{figures/fig4_sampling.pdf}
+\caption{\textbf{What survives measurement, and why.}
+\textbf{a}~Memory at $10^9$ preparations times replayed steps per output step, against the loss rate, with gentle
+writing or at the full amplitude.
+\textbf{b}~Feature variance against the write onto the slow modes, $\|\Pi_{\mathrm{slow}}[H_{\mathrm{in}},\rho_*]\|$,
+for the seven shapes that write, at a matched clock and input amplitude, eight reservoirs each, coloured as in
+Fig.~\ref{fig:clock}c; dotted: power laws fitted without and with dark states, with exponents 2.0, as linear
+accumulation of the write predicts, and 1.5, which the write alone does not explain.}
+\label{fig:sampling}
 \end{figure}
-
-The input must also reach the dark states directly, and the jump operators decide whether it does. The dark states
-of a shared channel $L\propto\sum_ic_i\sigma_i^-$ are annihilated by $\sum_ic_i\sigma_i^-$. An input field
-$\sum_ic_iX_i$ along the same phase vector is the sum of this operator and its adjoint, so it has no matrix element
-between dark states. It writes only through brief excursions into bright states, and its effect falls as
-$1/\gamma$, while an input pattern across the phase vector reaches the dark states directly (Methods). This explains
-the families of Fig.~\ref{fig:families}. The uniform input of Eq.~\eqref{eq:H} lies along the phases of the
-equal-phase channel and of each split channel, so it reaches the dark states only through bright states: their
-memory grows with the loss, but the signal behind it shrinks. For mixed phases and for pairwise loss the same input
-reaches the dark states directly, and at a fixed amplitude their records blend with later inputs, so the memory of
-single inputs stays near its weak-dissipation level and falls at the strongest loss. Gentle writing removes this
-limit. With the input amplitude scaled as $\gamma^{-1/2}$, the memory of the mixed-phase channel grows with the loss
-like that of the shared channel, its time to forget grows in proportion to $\gamma$ again, and at strong loss the
-signal in each feature keeps a constant size (dash-dotted in Fig.~\ref{fig:families}b,c; Methods).
-
-A three-spin reservoir with one shared channel of mixed phases shows both regimes, and there we prove them
-(Methods). With a fixed input amplitude the order of its memory grows in proportion to $\gamma$ and single inputs
-lose their share (Fig.~\ref{fig:writing}b), while the signal in a measured spin shrinks as $1/\gamma$. With the
-amplitude scaled as $8/\sqrt\gamma$, which exceeds the fixed amplitude below $\gamma=64$ and falls below it above, the
-order stays small (Fig.~\ref{fig:writing}c), single inputs keep a finite share, the signal stays finite, and the
-range of delays that holds 90\% of the single-input recall grows in proportion to $\gamma$. Computer-assisted bounds
-prove both limits for four Hamiltonians and for neighbourhoods of their couplings (Appendix~\ref{app:spins}).
-
-Coherence between dark states carries this memory. Coherence is known to shape the performance of spin
-reservoirs~\cite{Palacios2024}; here we isolate its role. We return the spins to the dark subspace after every
-input and compare two arms that differ only in a dephasing of the dark energy levels. The populations follow the
-same slow dynamics in both arms, but without coherence the stored signal collapses as $1/\gamma^2$ (Methods). A new
-input first turns a population into a coherence, and erasing the coherences deletes each record as soon as it is
-written (Appendix~\ref{app:spins}).
-
-\subsection{Longer but thinner}
-\label{sec:price}
-Protection with gentle writing makes the memory longer, not larger. The memory cannot exceed the number of features,
-45 here (Fig.~\ref{fig:families}b, dashed), and one observable holds at most one unit. As the time to forget keeps
-growing, each delay is therefore recalled more faintly. With five spins and mixed phases, the gently written memory
-levels off near 36, below the ceiling of 45, while the recall of the last input falls from 0.95 at $\gamma=64$ to
-0.57 at $\gamma=256$. With three spins the total recall of single inputs stays fixed while its range grows as
-$\gamma$, so each delay is recalled as $1/\gamma$.
-
-The signal in each feature is small. Exact expectation values stand for averages over many repeated runs. Three
-measurement settings, with all spins read along $X$, $Y$ or $Z$, give all 45 features, and a feature whose signal
-has variance $v$ needs roughly $1/v$ shots per setting and step. With gentle writing $v$ stays constant as the loss
-grows, near $5\times10^{-6}$ for an average feature of the five-spin reservoir, sixteen times less than at a fixed
-amplitude; this asks for about $2\times10^5$ shots per setting and step; with the uniform input of a shared channel it shrinks, so the shots needed
-grow too (Methods). In the first version of this study, finite sampling hid the advantage of the shared channel below
-about $2\times10^5$ preparations per step (Appendix~\ref{app:v1}).
-
-Ordinary noise caps the gain. Local loss at rate $\gamma_{\mathrm{loc}}$ limits the memory time to about
-$1/(b\gamma_{\mathrm{loc}}\Delta t)$ steps, with $b\approx1.41$, so for these five-spin reservoirs a memory of $T$ steps
-needs collective loss at least about $4T^2$ times stronger than local loss. Local dephasing acts the same way, with $b_\phi\approx4.07$ and a
-ratio of about $12T^2$ (Methods). In a waveguide, a dark state of four transmons has been shown to live more than a
-hundred times longer than a single qubit decaying into the guide~\cite{Zanner2022}; read as
-$\gamma/\gamma_{\mathrm{loc}}$ in this bound, a ratio of 100 allows a memory of about five steps, and every factor of four
-doubles it.
